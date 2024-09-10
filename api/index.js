@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import StudentModel from './models/studentModel.js';
 import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
+import cookieParser from "cookie-parser"; 
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(8);
@@ -15,6 +16,7 @@ const bcryptSalt = bcrypt.genSaltSync(8);
 const jwtSecret = 'domystringasd';
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174'], // İzin verilen tüm adresleri ekleyin
   credentials: true // Çerezler ve diğer yetkilendirme bilgilerini gönder
