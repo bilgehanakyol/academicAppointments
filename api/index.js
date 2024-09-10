@@ -3,8 +3,11 @@ import { PORT, mongoDBURL } from "./config.js";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import UserModel from "./models/userModel.js";
+import UserModel from "./models/trash/userModel.js";
 import jwt from 'jsonwebtoken';
+import StudentModel from './models/studentModel.js';
+import AcademianModel from './models/academianModel.js';
+import AppointmentModel from './models/appointmentModel.js';
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(8);
@@ -21,38 +24,39 @@ app.get('/', (req, res) => {
   res.send('Hello from API!');
 });
 
-// app.post('/register', async (req, res) => {
-//   const { name, email, password } = req.body;
-//   try {
-//     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
-//     const userDoc = await UserModel.create({
-//       name,
-//       email,
-//       password: hashedPassword,
-//     });
-//     res.json(userDoc);
-//   } catch (e) {
-//     console.error(e);
-//     res.status(422).json(e);
-//   }
-// });
-
 app.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, surname, email, password, role, department } = req.body;
   try {
     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
-    const userDoc = await UserModel.create({
-      name,
-      email,
-      password: hashedPassword,
-      role, // Role (student veya academician) ekliyoruz
-    });
+    let userDoc;
+
+    if (role === 'student') {
+      userDoc = await StudentModel.create({
+        name,
+        surname,
+        email,
+        password: hashedPassword,
+        department,
+      });
+    } else if (role === 'academician') {
+      userDoc = await AcademianModel.create({
+        name,
+        surname,
+        email,
+        password: hashedPassword,
+        department,
+      });
+    } else {
+      return res.status(400).json('Invalid role');
+    }
+
     res.json(userDoc);
   } catch (e) {
     console.error(e);
     res.status(422).json(e);
   }
 });
+
 app.post('/set-availability', async (req, res) => {
   const { token } = req.cookies;
   const { date, timeSlots } = req.body;
@@ -90,10 +94,14 @@ app.get('/availability/:academicianId', async (req, res) => {
   }
 });
 
+
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const userDoc = await UserModel.findOne({ email });
+    let userDoc = await StudentModel.findOne({ email });
+    if (!userDoc) {
+      userDoc = await AcademianModel.findOne({ email });
+    }
     if (userDoc) {
       const passOk = bcrypt.compareSync(password, userDoc.password);
       if (passOk) {
@@ -121,17 +129,24 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/profile', (req, res) => {
-  const {token} = req.cookies;
+  const { token } = req.cookies;
   if (token) {
-      jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-          if (err) throw err;
-          const {name, email, _id} = await UserModel.findById(userData.id);
-          res.json({name, email, _id});
-      });
+    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+      if (err) throw err;
+
+      let userDoc = await StudentModel.findById(userData.id);
+      if (!userDoc) {
+        userDoc = await AcademianModel.findById(userData.id);
+      }
+      
+      const { name, email, _id } = userDoc;
+      res.json({ name, email, _id });
+    });
   } else {
-      res.json(null);
+    res.json(null);
   }
 });
+
 app.post('/logout', (req, res) => { 
   res.cookie('token', '').json(true); 
 });
