@@ -19,13 +19,12 @@ export default function RegisterPage() {
             email,
             password,
             role,
-            department
+            department,
+            studentNo,
         };
 
         if (role === 'student') {
             requestData.studentNo = studentNo;
-        } else if (role === 'academician') {
-            requestData.academicianNo = academicianNo;
         }
 
         try {
