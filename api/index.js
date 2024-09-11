@@ -39,6 +39,7 @@ app.post('/register', async (req, res) => {
         email,
         password: hashedPassword,
         department,
+        role,
       });
     } else if (role === 'academician') {
       userDoc = await AcademianModel.create({
@@ -47,6 +48,7 @@ app.post('/register', async (req, res) => {
         email,
         password: hashedPassword,
         department,
+        role,
       });
     } else {
       return res.status(400).json('Invalid role');

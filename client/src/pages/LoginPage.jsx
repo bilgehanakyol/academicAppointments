@@ -1,26 +1,38 @@
 import { Link, Navigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import axios from "axios";
+import { UserContext } from "../components/UserContext";
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [redirect, setRedirect] = useState(false);
+    const { setUser } = useContext(UserContext); // User context'ten setUser fonksiyonunu alıyoruz
+    const [userRole, setUserRole] = useState(''); // Kullanıcı rolünü takip etmek için state ekledik
 
     async function handleLoginSubmit(ev) {
         ev.preventDefault();
         try {
-            const {data} = await axios.post('/login', {email,password});
-            console.log("Before setUser:", data);
-            alert('login succesfull');
-            setRedirect(true);
-        } catch(e) {
-            alert('login failed: ' + e.response.data); // Hata mesajını kullanıcıya göster
+            const response = await axios.post('/login', { email, password }); // Giriş isteği yapılıyor
+            console.log("Axios response:", response); // Gelen yanıtı konsola yazdır
+            const { data } = response; // Gelen yanıtın içindeki data'yı alıyoruz
+            setUser(data); // Kullanıcı bilgilerini UserContext'e kaydediyoruz
+            setUserRole(data.role); // Kullanıcı rolünü state'e kaydediyoruz
+            alert('Login successful');
+            setRedirect(true); // Yönlendirme için flag'i true yapıyoruz
+        } catch (e) {
+            console.error("Login failed:", e); // Hata konsola yazdırılıyor
+            alert('Login failed: ' + (e.response?.data || e.message)); // Hata mesajını kullanıcıya gösteriyoruz
         }
     }
 
     if (redirect) {
-        return <Navigate to={'/'} />
+        // Kullanıcının rolüne göre yönlendirme yap
+        if (userRole === 'student') {
+            return <Navigate to={'/profile'} />; // Öğrenciyse ana sayfaya yönlendir
+        } else if (userRole === 'academian') {
+            return <Navigate to={'/calendar'} />; // Akademisyense takvim sayfasına yönlendir
+        }
     }
 
     return (
@@ -38,7 +50,7 @@ export default function LoginPage() {
                     onChange={ ev => setPassword(ev.target.value)} />
                     <button className="primary">Login</button>
                     <div className="text-center py-2 text-gray-500">
-                        Dont have an account yet?   
+                        Don't have an account yet?   
                         <Link className="underline text-bn" to={"/register"}> Register Now</Link> 
                     </div>
                 </form>

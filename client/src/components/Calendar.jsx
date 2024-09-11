@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Header from './Header';
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const timeSlots = Array.from({ length: 9 }, (_, i) => `${9 + i}:00 - ${10 + i}:00`); // 09:00 - 18:00 saat aralıkları
@@ -27,10 +28,11 @@ export default function WeeklyCalendar({ appointments, onAvailabilityChange }) {
   };
 
   return (
-    <div className="grid grid-cols-8 gap-2">
+    <div>
+    <Header/>
+    <div className="p-4 grid grid-cols-8 gap-2">
       {/* Boş alan (sol üst köşe) */}
       <div></div> 
-
       {/* Günlerin başlıkları */}
       {daysOfWeek.map(day => (
         <div key={day} className="text-center font-bold">{day}</div>
@@ -54,6 +56,7 @@ export default function WeeklyCalendar({ appointments, onAvailabilityChange }) {
           ))}
         </React.Fragment>
       ))}
+    </div>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../components/UserContext';
 import { Navigate } from 'react-router-dom';
+import Header from '../components/Header';
+import BackButton from '../components/BackButton';
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
@@ -35,6 +37,8 @@ export default function ProfilePage() {
   }
 
   return (
+    <div className='p-4'>
+      <BackButton/>
     <div className="flex flex-col items-center mt-16">
       <h1 className="text-3xl font-bold mb-6">Profile</h1>
       <div className="bg-white shadow-lg rounded-lg p-6 w-96">
@@ -71,6 +75,7 @@ export default function ProfilePage() {
         )}
         <button onClick={logout}>Log out</button>
       </div>
+    </div>
     </div>
   );
 }

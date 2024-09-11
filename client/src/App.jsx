@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import axios from "axios";
 import ProfilePage from './pages/ProfilePage';
 import { UserContextProvider } from './components/UserContext';
+import WeeklyCalendar from './components/Calendar';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -18,6 +19,7 @@ function App() {
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/profile' element={<ProfilePage />} />
+      <Route path='/calendar' element={<WeeklyCalendar />}/>
   </Routes>
     </UserContextProvider>
     
