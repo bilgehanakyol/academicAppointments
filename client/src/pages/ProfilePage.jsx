@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../components/UserContext';
 import { Navigate } from 'react-router-dom';
-import Header from '../components/Header';
 import BackButton from '../components/BackButton';
 
 export default function ProfilePage() {

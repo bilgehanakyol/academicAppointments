@@ -7,6 +7,10 @@ import axios from "axios";
 import ProfilePage from './pages/ProfilePage';
 import { UserContextProvider } from './components/UserContext';
 import WeeklyCalendar from './components/Calendar';
+import AcademiciansPage from './pages/AcademicianPage';
+import AppointmentsPage from './pages/AppointmentsPage';
+import AcademianCalendar from './components/AcademianCalendar';
+
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -19,11 +23,13 @@ function App() {
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/profile' element={<ProfilePage />} />
+      <Route path='/appointments' element={<AppointmentsPage />} />
       <Route path='/calendar' element={<WeeklyCalendar />}/>
-  </Routes>
+      <Route path='/academicians' element={<AcademiciansPage />}/>
+      <Route path="/academians/:academianId/calendar" element={<AcademianCalendar />} />
+      </Routes>
     </UserContextProvider>
-    
-  )
+  );
 }
 
 export default App;

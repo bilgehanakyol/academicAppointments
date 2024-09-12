@@ -15,7 +15,7 @@ export function UserContextProvider({children}) {
             } catch (error) {
                 console.error('Failed to fetch user:', error);
             } finally {
-                setReady(true);  // İstek başarılı olsun ya da olmasın "ready"yi true yapıyoruz
+                setReady(true); 
             }
         }
 

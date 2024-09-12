@@ -13,6 +13,7 @@ export default function RegisterPage() {
 
     async function registerUser(ev) {
         ev.preventDefault();
+        // Sadece öğrenci rolü seçildiyse studentNo'yu requestData'ya ekleyin
         const requestData = {
             name,
             surname,
@@ -20,12 +21,8 @@ export default function RegisterPage() {
             password,
             role,
             department,
-            studentNo,
+            ...(role === 'student' && { studentNo }), // studentNo'yu sadece öğrenci rolünde ekleyin
         };
-
-        if (role === 'student') {
-            requestData.studentNo = studentNo;
-        }
 
         try {
             await axios.post('/register', requestData);
@@ -79,14 +76,12 @@ export default function RegisterPage() {
 
                     {/* Dynamic Form Fields Based on Role */}
                     {role === 'student' && (
-                        <>
-                            <input 
-                                type="text" 
-                                placeholder="Student Number" 
-                                value={studentNo}
-                                onChange={ev => setStudentNo(ev.target.value)} 
-                            />
-                        </>
+                        <input 
+                            type="text" 
+                            placeholder="Student Number" 
+                            value={studentNo}
+                            onChange={ev => setStudentNo(ev.target.value)} 
+                        />
                     )}
                     {/* Department Field (Common for both roles) */}
                     <input 

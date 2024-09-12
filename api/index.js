@@ -1,19 +1,18 @@
 import express from "express";
-import { PORT, mongoDBURL } from "./config.js";
+import { PORT, mongoDBURL, jwtSecret } from "./config.js";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import UserModel from "./models/trash/userModel.js";
 import jwt from 'jsonwebtoken';
 import StudentModel from './models/studentModel.js';
 import AcademianModel from './models/academianModel.js';
+//import CalendarModel from "./models/calendarModel.js";
 import AppointmentModel from './models/appointmentModel.js';
 import cookieParser from "cookie-parser"; 
+import CalendarModel from "./models/calendarModel.js";
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(8);
-
-const jwtSecret = 'domystringasd';
 
 app.use(express.json());
 app.use(cookieParser());
@@ -26,8 +25,8 @@ app.get('/', (req, res) => {
   res.send('Hello from API!');
 });
 
-app.post('/register', async (req, res) => {
-  const { name, surname, email, password, role, department } = req.body;
+ app.post('/register', async (req, res) => {
+  const { name, surname, email, password, role, department, studentNo, availability } = req.body;
   try {
     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
     let userDoc;
@@ -40,6 +39,7 @@ app.post('/register', async (req, res) => {
         password: hashedPassword,
         department,
         role,
+        studentNo
       });
     } else if (role === 'academician') {
       userDoc = await AcademianModel.create({
@@ -47,9 +47,31 @@ app.post('/register', async (req, res) => {
         surname,
         email,
         password: hashedPassword,
-        department,
         role,
+        department,
       });
+
+      if (availability) {
+        await CalendarModel.create({
+          academian: userDoc._id,
+          availability, // Gelen takvim verisini kullan
+        });
+      } else {
+        const defaultAvailability = [
+          { day: 'Monday', slots: [{date: '15.00', isAvalible: true}] },
+          { day: 'Tuesday', slots: [{}] },
+          { day: 'Wednesday', slots: [{}] },
+          { day: 'Thursday', slots: [{}] },
+          { day: 'Friday', slots: [{}] },
+          { day: 'Saturday', slots: [{}] },
+          { day: 'Sunday', slots: [{}] }
+        ];
+
+        await CalendarModel.create({
+          academian: userDoc._id,
+          availability: defaultAvailability,
+        });
+      }
     } else {
       return res.status(400).json('Invalid role');
     }
@@ -60,44 +82,6 @@ app.post('/register', async (req, res) => {
     res.status(422).json(e);
   }
 });
-
-app.post('/set-availability', async (req, res) => {
-  const { token } = req.cookies;
-  const { date, timeSlots } = req.body;
-
-  if (token) {
-    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-      if (err) throw err;
-
-      const userDoc = await UserModel.findById(userData.id);
-      if (userDoc.role === 'academician') { // Yalnızca akademisyenler randevu ekleyebilir
-        userDoc.availability.push({ date, timeSlots });
-        await userDoc.save();
-        res.json(userDoc);
-      } else {
-        res.status(403).json('Only academicians can set availability');
-      }
-    });
-  } else {
-    res.status(401).json('Unauthorized');
-  }
-});
-app.get('/availability/:academicianId', async (req, res) => {
-  const { academicianId } = req.params;
-
-  try {
-    const academician = await UserModel.findById(academicianId);
-    if (academician && academician.role === 'academician') {
-      res.json(academician.availability);
-    } else {
-      res.status(404).json('Academician not found or invalid role');
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json('Error fetching availability');
-  }
-});
-
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -154,6 +138,116 @@ app.get('/profile', (req, res) => {
 app.post('/logout', (req, res) => { 
   res.cookie('token', '').json(true); 
 });
+
+app.get('/academicians', async (req, res) => {
+  const academicians = await AcademianModel.find(); // Academian modelinden tüm akademisyenleri al
+  res.json(academicians); // JSON olarak döndür
+});
+// POST: /appointments
+// app.post('/appointments', async (req, res) => {
+//   const { academianId, studentId, date } = req.body;
+//   try {
+//       const appointment = new AppointmentModel({ academian: academianId, student: studentId, date });
+//       await appointment.save();
+//       res.json(appointment);
+//   } catch (e) {
+//       res.status(500).json({ error: 'Unable to create appointment' });
+//   }
+// });
+// Öğrenci randevu talep eder
+// app.post('/appointments', async (req, res) => {
+//   const { studentId, academianId, date, description } = req.body;
+//   try {
+//     const appointment = await AppointmentModel.create({
+//       studentId,
+//       academianId,
+//       date,
+//       description
+//     });
+//     res.json(appointment);
+//   } catch (error) {
+//     res.status(500).json({ error: 'Unable to create appointment' });
+//   }
+// });
+// app.post('/appointments', async (req, res) => {
+//   const { studentId, academianId, date, description } = req.body;
+//   try {
+//     const appointment = await AppointmentModel.create({
+//       student: studentId,
+//       academian: academianId,
+//       date,
+//       description
+//     });
+//     res.json(appointment);
+//   } catch (error) {
+//     res.status(500).json({ error: 'Unable to create appointment' });
+//   }
+// });
+// Express API endpoint
+// app.get('/academicians/:academianId/calendar', async (req, res) => {
+//   const { academianId } = req.params;
+//   try {
+//     const calendar = await CalendarModel.findOne({ academian: academianId });
+//     if (!calendar) {
+//       return res.status(404).json('Takvim bulunamadı.');
+//     }
+//     res.json(calendar);
+//   } catch (error) {
+//     res.status(500).json({ error: 'Bir hata oluştu.' });
+//   }
+// });
+
+// Müsaitlikleri eklemek için POST endpoint'i
+// Müsaitlikleri eklemek için POST endpoint'i
+app.post('/availability', async (req, res) => {
+  const { day, slots, academian } = req.body;
+   // JWT'den userId'yi al
+
+  try {
+    // Kullanıcının takvimini bul
+    const calendar = await CalendarModel.findOne({ academian: academian }); 
+
+    if (!calendar) {
+      return res.status(404).json('Takvim bulunamadı.');
+    }
+
+    const dayIndex = calendar.availability.findIndex((item) => item.day === day);
+
+    if (dayIndex > -1) {
+      // Gün mevcutsa, dilimleri güncelle
+      calendar.availability[dayIndex].slots = slots;
+    } else {
+      // Gün mevcut değilse, yeni gün ekle
+      calendar.availability.push({ day, slots });
+    }
+
+    await calendar.save();
+    res.status(200).json(calendar);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Bir hata oluştu.' });
+  }
+});
+
+// Müsaitlikleri almak için GET endpoint'i
+app.get('/availability', async (req, res) => {
+  const { userId } = req.query; // ID'yi query parametreleri olarak al
+
+  try {
+    if (!userId) {
+      return res.status(400).json('User ID is required.');
+    }
+    const calendar = await CalendarModel.findOne({ academian: userId });
+    if (!calendar) {
+      return res.status(404).json('Calendar not found.');
+    }
+    res.status(200).json(calendar.availability);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred.' });
+  }
+});
+
 
 mongoose
   .connect(mongoDBURL)

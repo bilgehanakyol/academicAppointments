@@ -12,7 +12,7 @@ const HomePage = () => {
       if (user?.role === 'academician') {
         navigate('/calendar'); // Eğer kullanıcı akademisyen ise calendar sayfasına yönlendir
       } else if (user?.role === 'student') {
-        navigate('/student-profile'); // Eğer kullanıcı öğrenci ise öğrenci profiline yönlendir
+        navigate('/'); // Eğer kullanıcı öğrenci ise öğrenci profiline yönlendir
       }
     }
   }, [ready, user, navigate]);
