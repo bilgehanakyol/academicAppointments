@@ -13,7 +13,6 @@ export default function RegisterPage() {
 
     async function registerUser(ev) {
         ev.preventDefault();
-        // Sadece öğrenci rolü seçildiyse studentNo'yu requestData'ya ekleyin
         const requestData = {
             name,
             surname,
@@ -21,9 +20,8 @@ export default function RegisterPage() {
             password,
             role,
             department,
-            ...(role === 'student' && { studentNo }), // studentNo'yu sadece öğrenci rolünde ekleyin
+            ...(role === 'student' && { studentNo }),
         };
-
         try {
             await axios.post('/register', requestData);
             alert('Registration is successful. Now you can log in');
@@ -37,7 +35,6 @@ export default function RegisterPage() {
             <div className="mb-64">
                 <h1 className="text-4xl text-center mb-4">Register</h1>
                 <form className="max-w-md mx-auto" onSubmit={registerUser}>
-                    {/* Name and Surname Fields */}
                     <input 
                         type="text" 
                         placeholder="First Name" 
@@ -50,8 +47,6 @@ export default function RegisterPage() {
                         value={surname}
                         onChange={ev => setSurname(ev.target.value)} 
                     />
-                    
-                    {/* Email and Password Fields */}
                     <input 
                         type="email" 
                         placeholder="your@email.com" 
@@ -64,8 +59,6 @@ export default function RegisterPage() {
                         value={password}
                         onChange={ev => setPassword(ev.target.value)} 
                     />
-
-                    {/* Role Selection */}
                     <select 
                         value={role}
                         onChange={ev => setRole(ev.target.value)}
@@ -73,8 +66,6 @@ export default function RegisterPage() {
                         <option value="student">Student</option>
                         <option value="academician">Academician</option>
                     </select>
-
-                    {/* Dynamic Form Fields Based on Role */}
                     {role === 'student' && (
                         <input 
                             type="text" 
@@ -83,17 +74,13 @@ export default function RegisterPage() {
                             onChange={ev => setStudentNo(ev.target.value)} 
                         />
                     )}
-                    {/* Department Field (Common for both roles) */}
                     <input 
                         type="text" 
                         placeholder="Department" 
                         value={department}
                         onChange={ev => setDepartment(ev.target.value)} 
                     />
-
                     <button className="primary">Register</button>
-                    
-                    {/* Link to Login Page */}
                     <div className="text-center py-2 text-gray-500">
                         Do you have an account?
                         <Link className="underline text-bn" to={"/login"}>Log in</Link>

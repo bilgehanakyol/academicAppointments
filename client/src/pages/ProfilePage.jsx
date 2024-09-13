@@ -10,10 +10,9 @@ export default function ProfilePage() {
   const {ready, user, setUser} = useContext(UserContext);
 
   useEffect(() => {
-    // Kullanıcının bilgilerini almak için bir API çağrısı
     async function fetchProfile() {
       try {
-        const { data } = await axios.get('/profile'); // Backend'de bu route'a uygun bir endpoint olmalı
+        const { data } = await axios.get('/profile');
         setProfileData(data);
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -72,7 +71,7 @@ export default function ProfilePage() {
             <p>Academician</p>
           </div>
         )}
-        <button onClick={logout}>Log out</button>
+        <button className='primary' onClick={logout}>Log out</button>
       </div>
     </div>
     </div>

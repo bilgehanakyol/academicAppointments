@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import axios from 'axios';
-import { UserContext } from './UserContext'; // UserContext dosyasının doğru yolunu belirtin
+import { UserContext } from './UserContext';
 
 const daysOfWeek = [
   'Monday',
@@ -30,7 +30,7 @@ export default function AvailabilityTable() {
         });
         setAvailabilities(availabilityData);
       } catch (error) {
-        console.error('Müsaitlikler alınırken bir hata oluştu:', error);
+        console.error('An error occurred while retrieving time slots:', error);
       }
     };
 
@@ -42,24 +42,31 @@ export default function AvailabilityTable() {
     setShowModal(true); // Modalı aç
   };
 
-  const handleAppointmentRequest = async () => {
-    // Randevu talebi için backend'e POST isteği gönder
+  const handleDeleteSlot = async () => {
     try {
-      await axios.post('/appointments', {
-        day: selectedSlot.day,
-        slot: selectedSlot.slot,
-        student: user._id, // Mevcut kullanıcının ID'si
+      await axios.delete(`/availability/${user._id}`, {
+        data: {
+          day: selectedSlot.day,
+          slot: selectedSlot.slot,
+        }
       });
-      alert('Randevu talebi oluşturuldu.');
+
+      // Silme işlemi başarılı olduktan sonra durumu güncelle
+      setAvailabilities(prev => ({
+        ...prev,
+        [selectedSlot.day]: prev[selectedSlot.day].filter(s => s !== selectedSlot.slot),
+      }));
+
+      alert('Time slot succesfully deleted.');
       setShowModal(false); // Modalı kapat
     } catch (error) {
-      console.error('Randevu oluşturulurken bir hata oluştu:', error);
+      console.error('An error occurred while deleting time slots:', error);
     }
   };
 
   return (
     <div className="mt-8 w-full">
-      <h2 className="text-xl font-semibold mb-4">Eklenen Müsaitlikler</h2>
+      <h2 className="text-xl font-semibold mb-4">Added time slots </h2>
       {Object.keys(availabilities).length > 0 ? (
         <div className="overflow-x-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
@@ -86,27 +93,27 @@ export default function AvailabilityTable() {
           </div>
         </div>
       ) : (
-        <p>Henüz müsaitlik eklenmemiş.</p>
+        <p>No time slots added yet.</p>
       )}
 
       {/* Modal Yapısı */}
       {showModal && selectedSlot && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
           <div className="bg-white p-6 rounded shadow-lg max-w-md w-full mx-auto">
-            <h3 className="text-xl mb-4">Randevu Talebi Oluştur</h3>
+            <h3 className="text-xl mb-4">Delete time slot</h3>
             <p>{selectedSlot.day} - {selectedSlot.slot}</p>
             <div className="flex justify-between mt-4">
               <button
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                onClick={handleAppointmentRequest}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                onClick={handleDeleteSlot}
               >
-                Randevu Talep Et
+                Delete time slot
               </button>
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                 onClick={() => setShowModal(false)}
               >
-                İptal
+                Cancel
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { addAvailability } from '../availability';  // Fonksiyonu içe aktarın
-import { UserContext } from './UserContext';  // Kullanıcı bilgilerini almak için
+import { addAvailability } from '../availability';  
+import { UserContext } from './UserContext';  
 
 const daysOfWeek = [
   'Monday',
@@ -24,7 +24,6 @@ const timeSlots = (startTime, endTime, interval) => {
     });
     currentTime = new Date(currentTime.getTime() + interval * 60000);
   }
-
   return slots;
 };
 
@@ -33,7 +32,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [interval, setInterval] = useState(15);
-  const { user } = useContext(UserContext);  // Kullanıcı bilgilerini al
+  const { user } = useContext(UserContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,16 +40,16 @@ export default function TimeSlotForm({ onAddAvailability }) {
       const slots = timeSlots(startTime, endTime, interval);
 
       try {
-        await addAvailability(selectedDay, slots, user._id);  // Academian ID'sini de gönder
-        alert('Müsaitlik başarıyla eklendi!');
+        await addAvailability(selectedDay, slots, user._id);
+        alert('Availability added successfully!');
         setSelectedDay('');
         setStartTime('');
         setEndTime('');
         setInterval(15);
         onAddAvailability(selectedDay, slots); // Callback
       } catch (error) {
-        console.error('Müsaitlik eklenirken bir hata oluştu:', error);
-        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        console.error('Error occurred while adding availability:', error);
+        alert('An error occurred. Please try again.');
       }
     }
   };
@@ -58,14 +57,14 @@ export default function TimeSlotForm({ onAddAvailability }) {
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
       <div className="mb-4">
-        <label className="block text-gray-700">Gün:</label>
+        <label className="block text-gray-700">Day:</label>
         <select
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
           className="w-full mt-2 p-2 border rounded-lg"
           required
         >
-          <option value="">Bir gün seçin</option>
+          <option value="">Select a day</option>
           {daysOfWeek.map((day, index) => (
             <option key={index} value={day}>
               {day}
@@ -75,7 +74,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Başlangıç Saati:</label>
+        <label className="block text-gray-700">Start time:</label>
         <input
           type="time"
           value={startTime}
@@ -86,7 +85,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Bitiş Saati:</label>
+        <label className="block text-gray-700">End Time:</label>
         <input
           type="time"
           value={endTime}
@@ -97,7 +96,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Dilim Süresi (Dakika):</label>
+        <label className="block text-gray-700">Enter slot interval:</label>
         <input
           type="number"
           value={interval}
@@ -114,7 +113,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
         type="submit"
         className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
       >
-        Müsaitlik Ekle
+        Add time slots
       </button>
     </form>
   );

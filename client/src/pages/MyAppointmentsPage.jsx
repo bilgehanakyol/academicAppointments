@@ -2,33 +2,30 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import AppointmentItem from '../components/AppointmentItem';
 import { UserContext } from '../components/UserContext';
+import BackButton from '../components/BackButton';
 
 export default function MyAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    // Veriyi API'den çek
-    axios.get('/my-appointments')
-      .then(response => {
-        setAppointments(response.data);
+    const fetchAppointments = async () => {
+      try {
+        const response = await axios.get('/my-appointments');
+        setAppointments(response.data || []);
+      } catch (error) {
+        setAppointments([]); 
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching appointments:', error);
-        setError('Veriler alınırken bir hata oluştu.');
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchAppointments();
   }, []);
 
   if (loading) {
     return <p>Loading...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
   }
 
   const isAcademician = user?.role === 'academician';
@@ -39,9 +36,10 @@ export default function MyAppointmentsPage() {
   const rejectedAppointments = appointments.filter(app => app.status === 'rejected');
 
   return (
-    <div className="container mx-auto p-4">
+    <div className='p-4'>
+      <BackButton />
+    <div className="container mx-auto">
       <h1 className="text-2xl font-bold mb-4">My Appointments</h1>
-
       {appointments.length === 0 ? (
         <p>No appointments found.</p>
       ) : (
@@ -80,8 +78,7 @@ export default function MyAppointmentsPage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
-
-

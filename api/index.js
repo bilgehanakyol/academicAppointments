@@ -126,8 +126,8 @@ app.get('/profile', (req, res) => {
         userDoc = await AcademianModel.findById(userData.id);
       }
       
-      const { name, email, _id, role } = userDoc;
-      res.json({ name, email, _id, role });
+      const { name, surname, email, _id, role, department, studentNo } = userDoc;
+      res.json({ name, surname, email, _id, role, department, studentNo });
     });
   } else {
     res.json(null);
@@ -188,6 +188,32 @@ app.get('/availability', async (req, res) => {
     res.status(500).json({ error: 'An error occurred.' });
   }
 });
+// DELETE endpoint for deleting availability
+app.delete('/availability/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { day, slot } = req.body; // İsteğin gövdesinden günü ve slotu alın
+
+  try {
+    // User'ın availability'sini bulun ve ilgili slotu silin
+    const calendar = await CalendarModel.findOne({ academian: userId });
+    if (calendar) {
+      // İlgili günün slots array'inden seçilen slotu silin
+      const dayAvailability = calendar.availability.find(item => item.day === day);
+      if (dayAvailability) {
+        dayAvailability.slots = dayAvailability.slots.filter(s => s.date !== slot);
+        await calendar.save(); // Güncellenmiş calendar'ı kaydedin
+        res.status(200).json({ message: 'Slot başarıyla silindi' });
+      } else {
+        res.status(404).json({ message: 'Gün bulunamadı' });
+      }
+    } else {
+      res.status(404).json({ message: 'Takvim bulunamadı' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Bir hata oluştu', error });
+  }
+});
+
 
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;

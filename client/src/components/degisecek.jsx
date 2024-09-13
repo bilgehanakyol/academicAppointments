@@ -14,12 +14,8 @@ export default function WeeklyAvailability() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Haftalık Müsaitlik Belirleme</h1>
-
-      {/* Müsaitlik ekleme formu */}
+      <h1 className="text-2xl font-bold mb-4">Weekly Program</h1>
       <TimeSlotForm onAddAvailability={addAvailability} />
-
-      {/* Haftalık Müsaitlik Tablosu */}
       <AvailabilityTable availabilities={availabilities} />
     </div>
   );

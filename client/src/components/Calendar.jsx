@@ -13,9 +13,9 @@ const daysOfWeek = [
 ];
 
 export default function CalendarPage() {
-  const { id } = useParams(); // Akademisyenin ID'sini al
+  const { id } = useParams();
   const [availabilities, setAvailabilities] = useState({});
-  const navigate = useNavigate(); // Navigasyon için useNavigate kullanıyoruz
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAvailabilities = async () => {
@@ -27,7 +27,7 @@ export default function CalendarPage() {
         });
         setAvailabilities(availabilityData);
       } catch (error) {
-        console.error('Müsaitlikler alınırken bir hata oluştu:', error);
+        console.error('An error occurred while retrieving time slots:', error);
       }
     };
 
@@ -41,7 +41,7 @@ export default function CalendarPage() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Eklenen Müsaitlikler</h2>
+      <h2 className="text-xl font-semibold mb-4">Added time slots.</h2>
       {Object.keys(availabilities).length > 0 ? (
         <div className="grid grid-cols-8 gap-4">
           {daysOfWeek.map((day) => (
@@ -66,7 +66,7 @@ export default function CalendarPage() {
           ))}
         </div>
       ) : (
-        <p>Henüz müsaitlik eklenmemiş.</p>
+        <p>No time slots added  yet.</p>
       )}
     </div>
   );

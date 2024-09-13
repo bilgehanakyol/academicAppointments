@@ -6,8 +6,8 @@ import { UserContext } from "../components/UserContext";
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [redirect, setRedirect] = useState(false);
-    const { setUser } = useContext(UserContext); // User context'ten setUser fonksiyonunu alıyoruz
+    const [redirect, setRedirect] = useState(false); // Yönlendirme durumu
+    const { setUser } = useContext(UserContext); // UserContext'ten setUser fonksiyonunu alıyoruz
     const [userRole, setUserRole] = useState(''); // Kullanıcı rolünü takip etmek için state ekledik
 
     async function handleLoginSubmit(ev) {
@@ -26,28 +26,28 @@ export default function LoginPage() {
         }
     }
 
+    // Eğer redirect true ise anasayfaya yönlendir
     if (redirect) {
-        // Kullanıcının rolüne göre yönlendirme yap
-        if (userRole === 'student') {
-            return <Navigate to={'/profile'} />; // Öğrenciyse ana sayfaya yönlendir
-        } else if (userRole === 'academian') {
-            return <Navigate to={'/profile'} />; // Akademisyense takvim sayfasına yönlendir
-        }
+        return <Navigate to="/" />;
     }
-
+    
     return (
         <div className="mt-32 grow flex items-center justify-around">
             <div className="mb-64">
                 <h1 className="text-4xl text-center mb-4">Login</h1>
                 <form className="max-w-md mx-auto" onSubmit={handleLoginSubmit}>
-                    <input type="email" 
-                    placeholder="your@email.com" 
-                    value={email} 
-                    onChange={ ev => setEmail(ev.target.value)} />
-                    <input type="password" 
-                    placeholder="password" 
-                    value={password} 
-                    onChange={ ev => setPassword(ev.target.value)} />
+                    <input 
+                        type="email" 
+                        placeholder="your@email.com" 
+                        value={email} 
+                        onChange={ ev => setEmail(ev.target.value)} 
+                    />
+                    <input 
+                        type="password" 
+                        placeholder="password" 
+                        value={password} 
+                        onChange={ ev => setPassword(ev.target.value)} 
+                    />
                     <button className="primary">Login</button>
                     <div className="text-center py-2 text-gray-500">
                         Don't have an account yet?   
