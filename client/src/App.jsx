@@ -9,8 +9,9 @@ import { UserContextProvider } from './components/UserContext';
 import WeeklyCalendar from './components/Calendar';
 import AcademiciansPage from './pages/AcademicianPage';
 import AppointmentsPage from './pages/AppointmentsPage';
-import AcademianCalendar from './components/AcademianCalendar';
-
+import CalendarPage from './components/Calendar';
+import MyAppointmentsPage from './pages/MyAppointmentsPage';
+import CreateAppointmentPage from './pages/CreateAppointmentPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -24,9 +25,11 @@ function App() {
       <Route path='/login' element={<LoginPage />} />
       <Route path='/profile' element={<ProfilePage />} />
       <Route path='/appointments' element={<AppointmentsPage />} />
+      <Route path='/my-appointments' element={<MyAppointmentsPage />} />
+      <Route path="/create-appointment" element={<CreateAppointmentPage />} />
       <Route path='/calendar' element={<WeeklyCalendar />}/>
       <Route path='/academicians' element={<AcademiciansPage />}/>
-      <Route path="/academians/:academianId/calendar" element={<AcademianCalendar />} />
+      <Route path="calendar/:id" element={<CalendarPage />} />
       </Routes>
     </UserContextProvider>
   );

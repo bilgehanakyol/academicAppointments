@@ -31,7 +31,7 @@ export default function LoginPage() {
         if (userRole === 'student') {
             return <Navigate to={'/profile'} />; // Öğrenciyse ana sayfaya yönlendir
         } else if (userRole === 'academian') {
-            return <Navigate to={'/calendar'} />; // Akademisyense takvim sayfasına yönlendir
+            return <Navigate to={'/profile'} />; // Akademisyense takvim sayfasına yönlendir
         }
     }
 

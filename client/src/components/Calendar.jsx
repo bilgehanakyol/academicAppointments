@@ -1,62 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import Header from './Header';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const timeSlots = Array.from({ length: 9 }, (_, i) => `${9 + i}:00 - ${10 + i}:00`); // 09:00 - 18:00 saat aralıkları
+const daysOfWeek = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
-export default function WeeklyCalendar({ appointments, onAvailabilityChange }) {
-  const [availability, setAvailability] = useState({});
+export default function CalendarPage() {
+  const { id } = useParams(); // Akademisyenin ID'sini al
+  const [availabilities, setAvailabilities] = useState({});
+  const navigate = useNavigate(); // Navigasyon için useNavigate kullanıyoruz
 
   useEffect(() => {
-    if (appointments) {
-      setAvailability(appointments); // Mevcut randevuları yükle
-    }
-  }, [appointments]);
+    const fetchAvailabilities = async () => {
+      try {
+        const { data } = await axios.get(`/availability?userId=${id}`);
+        const availabilityData = {};
+        data.forEach(day => {
+          availabilityData[day.day] = day.slots.map(slot => slot.date).filter(date => date); // Sadece geçerli tarihleri ekleyin
+        });
+        setAvailabilities(availabilityData);
+      } catch (error) {
+        console.error('Müsaitlikler alınırken bir hata oluştu:', error);
+      }
+    };
 
-  const handleSlotClick = (day, time) => {
-    const updatedAvailability = { ...availability };
-    if (!updatedAvailability[day]) {
-      updatedAvailability[day] = [];
-    }
-    if (updatedAvailability[day].includes(time)) {
-      updatedAvailability[day] = updatedAvailability[day].filter(slot => slot !== time);
-    } else {
-      updatedAvailability[day].push(time);
-    }
-    setAvailability(updatedAvailability);
-    onAvailabilityChange(updatedAvailability); // Değişiklikleri dışarıya gönder
+    fetchAvailabilities();
+  }, [id]);
+
+  const handleSlotClick = (day, slot) => {
+    // Randevu oluşturma sayfasına yönlendirme
+    navigate(`/create-appointment?day=${day}&slot=${slot}&academianId=${id}`);
   };
 
   return (
-    <div>
-    <Header/>
-    <div className="p-4 grid grid-cols-8 gap-2">
-      {/* Boş alan (sol üst köşe) */}
-      <div></div> 
-      {/* Günlerin başlıkları */}
-      {daysOfWeek.map(day => (
-        <div key={day} className="text-center font-bold">{day}</div>
-      ))}
-
-      {/* Saatlerin listesi ve hücreler */}
-      {timeSlots.map(time => (
-        <React.Fragment key={time}>
-          {/* Saat dilimi sol sütunda */}
-          <div className="font-bold">{time}</div>
-          {/* Her saat dilimi için günlerdeki hücreler */}
-          {daysOfWeek.map(day => (
-            <div
-              key={day + time}
-              className={`border p-2 cursor-pointer text-center 
-              ${availability[day]?.includes(time) ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-              onClick={() => handleSlotClick(day, time)}
-            >
-              {availability[day]?.includes(time) ? 'Busy' : 'Available'}
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold mb-4">Eklenen Müsaitlikler</h2>
+      {Object.keys(availabilities).length > 0 ? (
+        <div className="grid grid-cols-8 gap-4">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="border p-2 bg-gray-100">
+              <h3 className="font-semibold text-center mb-2">{day}</h3>
+              {availabilities[day] && availabilities[day].length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {availabilities[day].map((slot, index) => (
+                    <div 
+                      key={index} 
+                      className="border p-2 bg-white rounded shadow cursor-pointer hover:bg-blue-100"
+                      onClick={() => handleSlotClick(day, slot)} // Tıklanabilir hale getirdik
+                    >
+                      {slot}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">Yok</p>
+              )}
             </div>
           ))}
-        </React.Fragment>
-      ))}
-    </div>
+        </div>
+      ) : (
+        <p>Henüz müsaitlik eklenmemiş.</p>
+      )}
     </div>
   );
 }

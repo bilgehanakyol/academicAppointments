@@ -10,7 +10,7 @@ const HomePage = () => {
   useEffect(() => {
     if (ready) {
       if (user?.role === 'academician') {
-        navigate('/calendar'); // Eğer kullanıcı akademisyen ise calendar sayfasına yönlendir
+        navigate('/'); // Eğer kullanıcı akademisyen ise calendar sayfasına yönlendir
       } else if (user?.role === 'student') {
         navigate('/'); // Eğer kullanıcı öğrenci ise öğrenci profiline yönlendir
       }
