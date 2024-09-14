@@ -28,7 +28,6 @@ export default function Header() {
         </svg>
         <span className="font-bold text-xl">İSTE</span>
       </Link>
-      {/* Navigation Links */}
       <div className="flex items-center gap-4">
         {user?.role === 'student' ? (
           <>

@@ -4,7 +4,7 @@ export const addAvailability = async (day, timeSlots, academianId) => {
   try {
     const response = await axios.post('/availability', {
       day,
-      slots: timeSlots,  // slots dizisini string değil obje olarak gönderiyoruz
+      slots: timeSlots,
       academian: academianId
     });
     return response.data;
