@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
         role,
         department,
       });
-
+      //TODO: burdaki availability model oluşturma sürecini incele
       if (availability) {
         await CalendarModel.create({
           academian: userDoc._id,
@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
         });
       } else {
         const defaultAvailability = [
-          { day: 'Monday', slots: [{date: '15.00', isAvalible: true}] },
+          { day: 'Monday', slots: [{}] },
           { day: 'Tuesday', slots: [{}] },
           { day: 'Wednesday', slots: [{}] },
           { day: 'Thursday', slots: [{}] },
