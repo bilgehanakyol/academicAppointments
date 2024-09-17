@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { addAvailability } from '../availability';  
-import { UserContext } from './UserContext';  
+import { addAvailability } from '../availability';
+import { UserContext } from './UserContext';
 
 const daysOfWeek = [
   'Monday',
@@ -55,13 +55,15 @@ export default function TimeSlotForm({ onAddAvailability }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto mb-8">
+      <h3 className="text-xl font-semibold mb-4 text-gray-700">Add New Time Slots</h3>
+
       <div className="mb-4">
-        <label className="block text-gray-700">Day:</label>
+        <label className="block text-gray-700 font-medium">Day:</label>
         <select
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
-          className="w-full mt-2 p-2 border rounded-lg"
+          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           required
         >
           <option value="">Select a day</option>
@@ -74,38 +76,38 @@ export default function TimeSlotForm({ onAddAvailability }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Start time:</label>
+        <label className="block text-gray-700 font-medium">Start time:</label>
         <input
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="w-full mt-2 p-2 border rounded-lg"
+          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">End Time:</label>
+        <label className="block text-gray-700 font-medium">End Time:</label>
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="w-full mt-2 p-2 border rounded-lg"
+          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Enter slot interval:</label>
+        <label className="block text-gray-700 font-medium">Enter slot interval (minutes):</label>
         <input
           type="number"
           value={interval}
           onChange={(e) => setInterval(Number(e.target.value))}
-          className="w-full mt-2 p-2 border rounded-lg"
+          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           required
           min="5"
           step="5"
-          placeholder="Dilim süresi girin (örn. 15)"
+          placeholder="Enter slot duration (e.g., 15)"
         />
       </div>
 
@@ -113,7 +115,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
         type="submit"
         className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
       >
-        Add time slots
+        Add Time Slots
       </button>
     </form>
   );
