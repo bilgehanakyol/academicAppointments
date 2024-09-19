@@ -26,7 +26,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { name, surname, email, password, role, department, studentNo, availability } = req.body;
+  const { name, surname, email, password, role, department, studentNo } = req.body;
+
   try {
     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
     let userDoc;
@@ -51,61 +52,49 @@ app.post('/register', async (req, res) => {
         department,
       });
 
-      if (availability) {
-        await CalendarModel.create({
-          academian: userDoc._id,
-          availability,
-        });
-      } else {
-        const defaultAvailability = [
-          { day: 'Monday', slots: [{}] },
-          { day: 'Tuesday', slots: [{}] },
-          { day: 'Wednesday', slots: [{}] },
-          { day: 'Thursday', slots: [{}] },
-          { day: 'Friday', slots: [{}] },
-          { day: 'Saturday', slots: [{}] },
-          { day: 'Sunday', slots: [{}] }
-        ];
+      const defaultAvailability = [
+        { day: 'Monday', slots: [{}] },
+        { day: 'Tuesday', slots: [{}] },
+        { day: 'Wednesday', slots: [{}] },
+        { day: 'Thursday', slots: [{}] },
+        { day: 'Friday', slots: [{}] },
+        { day: 'Saturday', slots: [{}] },
+        { day: 'Sunday', slots: [{}] }
+      ];
 
-        await CalendarModel.create({
-          academian: userDoc._id,
-          availability: defaultAvailability,
-        });
-      }
+      await CalendarModel.create({
+        academian: userDoc._id,
+        availability: defaultAvailability,
+      });
     } else {
       return res.status(400).json('Invalid role');
     }
 
-    // QR kodu JWT ile oluştur ve kullanıcıya ata
+    // JWT ve QR kodu oluştur
     const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
     const qrCodeUrl = await QRCode.toDataURL(token);
 
-    // QR kodu kullanıcı belgesine kaydet
+    // QR kodunu kullanıcıya ata
     userDoc.qrCode = qrCodeUrl;
     await userDoc.save();
 
     res.json(userDoc);
   } catch (e) {
     console.error(e);
-    res.status(422).json(e);
+    res.status(422).json(e.message || 'An error occurred');
   }
 });
-
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // Kullanıcıyı öğrenci ve akademisyen olarak bul
     let userDoc = await StudentModel.findOne({ email });
     if (!userDoc) {
       userDoc = await AcademianModel.findOne({ email });
     }
 
-    // Kullanıcı bulunduysa şifreyi kontrol et
     if (userDoc) {
       const passOk = bcrypt.compareSync(password, userDoc.password);
-      
-      // Şifre doğruysa JWT oluştur
       if (passOk) {
         jwt.sign(
           { email: userDoc.email, id: userDoc._id },
@@ -115,9 +104,8 @@ app.post('/login', async (req, res) => {
             if (err) {
               console.error(err);
               return res.status(500).json('Internal server error');
-            }
-            
-            // JWT token'ı yanıtla
+            } 
+            // JWT response 
             res.cookie('token', token, { httpOnly: true }).json(userDoc);
           }
         );
@@ -132,85 +120,15 @@ app.post('/login', async (req, res) => {
     res.status(500).json('Internal server error');
   }
 });
-
-
-// app.post('/login', async (req, res) => {
-//   const { email, password } = req.body;
-//   try {
-//     let userDoc = await StudentModel.findOne({ email });
-//     if (!userDoc) {
-//       userDoc = await AcademianModel.findOne({ email });
-//     }
-//     if (userDoc) {
-//       const passOk = bcrypt.compareSync(password, userDoc.password);
-//       if (passOk) {
-//         jwt.sign({
-//           email: userDoc.email,
-//           id: userDoc._id,
-//         }, jwtSecret, {}, async (err, token) => {
-//           if (err) {
-//             console.error(err);
-//             res.status(500).json('Internal server error');
-//             return;
-//           }
-
-//           // QR kod oluştur
-//           const qrCodeUrl = await QRCode.toDataURL(token);
-
-//           // JWT token'ı ve QR kodu birlikte yanıtla
-//           res.cookie('token', token, { httpOnly: true }).json({ user: userDoc, qrCodeUrl });
-//         });
-//       } else {
-//         res.status(422).json('Password is not correct');
-//       }
-//     } else {
-//       res.status(404).json('User not found');
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json('Internal server error');
-//   }
-// });
-// QR kod tarama ile giriş
-app.get('/qr-login', async (req, res) => {
-  const { token } = req.query;
-
-  if (!token) {
-    return res.status(400).json('Token is required.');
-  }
-
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) {
-      console.error('Invalid QR token:', err);
-      return res.status(403).json('Invalid token');
-    }
-
-    let userDoc = await StudentModel.findById(userData.id);
-    if (!userDoc) {
-      userDoc = await AcademianModel.findById(userData.id);
-    }
-
-    if (!userDoc) {
-      return res.status(404).json('User not found');
-    }
-
-    res.cookie('token', token, { httpOnly: true }).json(userDoc);
-  });
-});
-
-
-
 app.get('/profile', (req, res) => {
   const { token } = req.cookies;
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) throw err;
-
       let userDoc = await StudentModel.findById(userData.id);
       if (!userDoc) {
         userDoc = await AcademianModel.findById(userData.id);
       }
-      
       const { name, surname, email, _id, role, department, studentNo } = userDoc;
       res.json({ name, surname, email, _id, role, department, studentNo });
     });
@@ -218,14 +136,12 @@ app.get('/profile', (req, res) => {
     res.json(null);
   }
 });
-
 app.post('/logout', (req, res) => { 
   res.cookie('token', '').json(true); 
 });
-
 app.get('/academicians', async (req, res) => {
-  const academicians = await AcademianModel.find(); // Academian modelinden tüm akademisyenleri al
-  res.json(academicians); // JSON olarak döndür
+  const academicians = await AcademianModel.find();
+  res.json(academicians);
 });
 
 // Müsaitlikleri eklemek için POST endpoint'i
@@ -287,7 +203,7 @@ app.delete('/availability/:userId', async (req, res) => {
       if (dayAvailability) {
         dayAvailability.slots = dayAvailability.slots.filter(s => s.date !== slot);
         await calendar.save(); // Güncellenmiş calendar'ı kaydedin
-        res.status(200).json({ message: 'Slot başarıyla silindi' });
+        res.status(200).json({ message: 'The slot succesfully deleted' });
       } else {
         res.status(404).json({ message: 'Gün bulunamadı' });
       }
@@ -295,10 +211,9 @@ app.delete('/availability/:userId', async (req, res) => {
       res.status(404).json({ message: 'Takvim bulunamadı' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Bir hata oluştu', error });
+    res.status(500).json({ message: 'An error occured', error });
   }
 });
-
 
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;
