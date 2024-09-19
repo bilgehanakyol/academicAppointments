@@ -75,26 +75,28 @@ export default function TimeSlotForm({ onAddAvailability }) {
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium">Start time:</label>
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-          required
-        />
-      </div>
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-gray-700 font-medium">Start time:</label>
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+            required
+          />
+        </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium">End Time:</label>
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-          required
-        />
+        <div>
+          <label className="block text-gray-700 font-medium">End Time:</label>
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+            required
+          />
+        </div>
       </div>
 
       <div className="mb-4">

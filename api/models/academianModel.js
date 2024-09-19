@@ -8,7 +8,8 @@ const academianSchema = new mongoose.Schema({
   password: String,
   role: { type: String, default: 'academian' },
   department: String,
-  calendar: { type: mongoose.Schema.Types.ObjectId, ref: 'Calendar' }
+  calendar: { type: mongoose.Schema.Types.ObjectId, ref: 'Calendar' },
+  qrCode: { type: String },
 });
 
 const AcademianModel = mongoose.model('Academian', academianSchema);

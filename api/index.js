@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
+import QRCode from 'qrcode';
 import StudentModel from './models/studentModel.js';
 import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
@@ -24,7 +25,7 @@ app.get('/', (req, res) => {
   res.send('Hello from API!');
 });
 
- app.post('/register', async (req, res) => {
+app.post('/register', async (req, res) => {
   const { name, surname, email, password, role, department, studentNo, availability } = req.body;
   try {
     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
@@ -49,11 +50,11 @@ app.get('/', (req, res) => {
         role,
         department,
       });
-      //TODO: burdaki availability model oluşturma sürecini incele
+
       if (availability) {
         await CalendarModel.create({
           academian: userDoc._id,
-          availability, // Gelen takvim verisini kullan
+          availability,
         });
       } else {
         const defaultAvailability = [
@@ -75,6 +76,14 @@ app.get('/', (req, res) => {
       return res.status(400).json('Invalid role');
     }
 
+    // QR kodu JWT ile oluştur ve kullanıcıya ata
+    const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
+    const qrCodeUrl = await QRCode.toDataURL(token);
+
+    // QR kodu kullanıcı belgesine kaydet
+    userDoc.qrCode = qrCodeUrl;
+    await userDoc.save();
+
     res.json(userDoc);
   } catch (e) {
     console.error(e);
@@ -84,27 +93,36 @@ app.get('/', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  
   try {
+    // Kullanıcıyı öğrenci ve akademisyen olarak bul
     let userDoc = await StudentModel.findOne({ email });
     if (!userDoc) {
       userDoc = await AcademianModel.findOne({ email });
     }
+
+    // Kullanıcı bulunduysa şifreyi kontrol et
     if (userDoc) {
       const passOk = bcrypt.compareSync(password, userDoc.password);
+      
+      // Şifre doğruysa JWT oluştur
       if (passOk) {
-        jwt.sign({
-          email: userDoc.email,
-          id: userDoc._id,
-        }, jwtSecret, {}, (err, token) => {
-          if (err) {
-            console.error(err);
-            res.status(500).json('Internal server error');
-            return;
+        jwt.sign(
+          { email: userDoc.email, id: userDoc._id },
+          jwtSecret,
+          {},
+          (err, token) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json('Internal server error');
+            }
+            
+            // JWT token'ı yanıtla
+            res.cookie('token', token, { httpOnly: true }).json(userDoc);
           }
-          res.cookie('token', token, { httpOnly: true }).json(userDoc);
-        });
+        );
       } else {
-        res.status(422).json('Password is not correct');
+        res.status(422).json('Password is incorrect');
       }
     } else {
       res.status(404).json('User not found');
@@ -114,6 +132,73 @@ app.post('/login', async (req, res) => {
     res.status(500).json('Internal server error');
   }
 });
+
+
+// app.post('/login', async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     let userDoc = await StudentModel.findOne({ email });
+//     if (!userDoc) {
+//       userDoc = await AcademianModel.findOne({ email });
+//     }
+//     if (userDoc) {
+//       const passOk = bcrypt.compareSync(password, userDoc.password);
+//       if (passOk) {
+//         jwt.sign({
+//           email: userDoc.email,
+//           id: userDoc._id,
+//         }, jwtSecret, {}, async (err, token) => {
+//           if (err) {
+//             console.error(err);
+//             res.status(500).json('Internal server error');
+//             return;
+//           }
+
+//           // QR kod oluştur
+//           const qrCodeUrl = await QRCode.toDataURL(token);
+
+//           // JWT token'ı ve QR kodu birlikte yanıtla
+//           res.cookie('token', token, { httpOnly: true }).json({ user: userDoc, qrCodeUrl });
+//         });
+//       } else {
+//         res.status(422).json('Password is not correct');
+//       }
+//     } else {
+//       res.status(404).json('User not found');
+//     }
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json('Internal server error');
+//   }
+// });
+// QR kod tarama ile giriş
+app.get('/qr-login', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json('Token is required.');
+  }
+
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) {
+      console.error('Invalid QR token:', err);
+      return res.status(403).json('Invalid token');
+    }
+
+    let userDoc = await StudentModel.findById(userData.id);
+    if (!userDoc) {
+      userDoc = await AcademianModel.findById(userData.id);
+    }
+
+    if (!userDoc) {
+      return res.status(404).json('User not found');
+    }
+
+    res.cookie('token', token, { httpOnly: true }).json(userDoc);
+  });
+});
+
+
 
 app.get('/profile', (req, res) => {
   const { token } = req.cookies;

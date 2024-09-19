@@ -74,12 +74,13 @@ export default function RegisterPage() {
                             onChange={ev => setStudentNo(ev.target.value)} 
                         />
                     )}
-                    <input 
-                        type="text" 
-                        placeholder="Department" 
+                    <select 
                         value={department}
-                        onChange={ev => setDepartment(ev.target.value)} 
-                    />
+                        onChange={ev => setDepartment(ev.target.value)}
+                    >
+                        <option value="Industrial Engineering">Industrial Engineering</option>
+                        <option value="Computer Engineering">Computer Engineering</option>
+                    </select>
                     <button className="primary">Register</button>
                     <div className="text-center py-2 text-gray-500">
                         Do you have an account?
