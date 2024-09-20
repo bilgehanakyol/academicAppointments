@@ -6,7 +6,6 @@ import LoginPage from './pages/LoginPage';
 import axios from "axios";
 import ProfilePage from './pages/ProfilePage';
 import { UserContextProvider } from './components/UserContext';
-import WeeklyCalendar from './components/Calendar';
 import AcademiciansPage from './pages/AcademicianPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import CalendarPage from './components/Calendar';
@@ -27,7 +26,6 @@ function App() {
       <Route path='/appointments' element={<AppointmentsPage />} />
       <Route path='/my-appointments' element={<MyAppointmentsPage />} />
       <Route path="/create-appointment" element={<CreateAppointmentPage />} />
-      <Route path='/calendar' element={<WeeklyCalendar />}/>
       <Route path='/academicians' element={<AcademiciansPage />}/>
       <Route path="calendar/:id" element={<CalendarPage />} />
       </Routes>

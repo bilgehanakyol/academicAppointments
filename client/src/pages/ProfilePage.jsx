@@ -3,7 +3,7 @@ import axios from 'axios';
 import { UserContext } from '../components/UserContext';
 import { Navigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
-import QRCode from 'qrcode'; // qrcode kütüphanesini import edin
+import QRCode from 'qrcode'; 
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
@@ -17,7 +17,6 @@ export default function ProfilePage() {
         const { data } = await axios.get('/profile');
         setProfileData(data);
 
-        // QR kodunu oluştur
         QRCode.toDataURL(data.email, { width: 128 }, (err, url) => {
           if (err) {
             console.error('Error generating QR code:', err);
@@ -69,7 +68,6 @@ export default function ProfilePage() {
             <p>{profileData.department}</p>
           </div>
 
-          {/* Kullanıcının rolüne göre dinamik alanlar */}
           {profileData.role === 'student' && (
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">Student Number:</label>
@@ -85,7 +83,6 @@ export default function ProfilePage() {
           )}
 
           <button className='primary' onClick={logout}>Log out</button>
-          {/* QR kodunu burada gösteriyoruz */}
           <div className="mt-8 flex flex-col items-center">
             <h2 className="text-xl font-semibold mb-4">QR Code</h2>
             {qrCode && <img src={qrCode} alt="QR Code" />}
