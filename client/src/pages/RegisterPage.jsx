@@ -9,7 +9,7 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('student');
-    const [department, setDepartment] = useState('');
+    const [department, setDepartment] = useState('Computer Engineering');
 
     async function registerUser(ev) {
         ev.preventDefault();

@@ -11,6 +11,7 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import CalendarPage from './components/Calendar';
 import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import CreateAppointmentPage from './pages/CreateAppointmentPage';
+import ControlCalendar from './components/ControlCalendar';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -19,7 +20,7 @@ function App() {
   return (
     <UserContextProvider>
       <Routes>
-      <Route path='/' element={<HomePage />} />
+      <Route path='/' element={<ControlCalendar />} />
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/profile' element={<ProfilePage />} />

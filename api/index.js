@@ -53,13 +53,13 @@ app.post('/register', async (req, res) => {
       });
 
       const defaultAvailability = [
-        { day: 'Monday', slots: [{}] },
-        { day: 'Tuesday', slots: [{}] },
-        { day: 'Wednesday', slots: [{}] },
-        { day: 'Thursday', slots: [{}] },
-        { day: 'Friday', slots: [{}] },
-        { day: 'Saturday', slots: [{}] },
-        { day: 'Sunday', slots: [{}] }
+        { day: 'Monday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Tuesday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Wednesday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Thursday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Friday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Saturday', slots: [{ date: '', isAvailable: true }] },
+        { day: 'Sunday', slots: [{ date: '', isAvailable: true }] }
       ];
 
       await CalendarModel.create({
@@ -70,11 +70,9 @@ app.post('/register', async (req, res) => {
       return res.status(400).json('Invalid role');
     }
 
-    // JWT ve QR kodu oluştur
     const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
     const qrCodeUrl = await QRCode.toDataURL(token);
 
-    // QR kodunu kullanıcıya ata
     userDoc.qrCode = qrCodeUrl;
     await userDoc.save();
 
@@ -143,38 +141,29 @@ app.get('/academicians', async (req, res) => {
   const academicians = await AcademianModel.find();
   res.json(academicians);
 });
-
-// Müsaitlikleri eklemek için POST endpoint'i
 app.post('/availability', async (req, res) => {
   const { day, slots, academian } = req.body;
-   // JWT'den userId'yi al
 
   try {
-    // Kullanıcının takvimini bul
     const calendar = await CalendarModel.findOne({ academian: academian }); 
     if (!calendar) {
-      return res.status(404).json('Takvim bulunamadı.');
+      return res.status(404).json('Calendar not found.');
     }
     const dayIndex = calendar.availability.findIndex((item) => item.day === day);
     if (dayIndex > -1) {
-      // Gün mevcutsa, dilimleri güncelle
       calendar.availability[dayIndex].slots = slots;
     } else {
-      // Gün mevcut değilse, yeni gün ekle
       calendar.availability.push({ day, slots });
     }
     await calendar.save();
     res.status(200).json(calendar);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Bir hata oluştu.' });
+    res.status(500).json({ error: 'An error occured.' });
   }
 });
-
-// Müsaitlikleri almak için GET endpoint'i
 app.get('/availability', async (req, res) => {
-  const { userId } = req.query; // ID'yi query parametreleri olarak al
-
+  const { userId } = req.query; 
   try {
     if (!userId) {
       return res.status(400).json('User ID is required.');
@@ -189,26 +178,23 @@ app.get('/availability', async (req, res) => {
     res.status(500).json({ error: 'An error occurred.' });
   }
 });
-// DELETE endpoint for deleting availability
 app.delete('/availability/:userId', async (req, res) => {
   const { userId } = req.params;
-  const { day, slot } = req.body; // İsteğin gövdesinden günü ve slotu alın
+  const { day, slot } = req.body;
 
   try {
-    // User'ın availability'sini bulun ve ilgili slotu silin
     const calendar = await CalendarModel.findOne({ academian: userId });
     if (calendar) {
-      // İlgili günün slots array'inden seçilen slotu silin
       const dayAvailability = calendar.availability.find(item => item.day === day);
       if (dayAvailability) {
         dayAvailability.slots = dayAvailability.slots.filter(s => s.date !== slot);
-        await calendar.save(); // Güncellenmiş calendar'ı kaydedin
+        await calendar.save();
         res.status(200).json({ message: 'The slot succesfully deleted' });
       } else {
-        res.status(404).json({ message: 'Gün bulunamadı' });
+        res.status(404).json({ message: 'Day not found' });
       }
     } else {
-      res.status(404).json({ message: 'Takvim bulunamadı' });
+      res.status(404).json({ message: 'Calendar not found' });
     }
   } catch (error) {
     res.status(500).json({ message: 'An error occured', error });
@@ -231,7 +217,6 @@ app.get('/my-appointments', async (req, res) => {
       let appointments;
       let userDoc;
 
-      // Kullanıcıyı bul
       userDoc = await StudentModel.findById(userData.id);
       if (!userDoc) {
         userDoc = await AcademianModel.findById(userData.id);
@@ -239,17 +224,14 @@ app.get('/my-appointments', async (req, res) => {
           return res.status(404).json('User not found.');
         }
       }
-
-      // Öğrenci ise, sadece talep ettiği randevuları getir
       if (userDoc.role === 'student') {
         appointments = await AppointmentModel.find({ studentId: userData.id })
-          .populate('academianId'); // Akademisyen bilgilerini almak için
+          .populate('academianId');
       }
 
-      // Akademisyen ise, sadece kendisine talep edilen randevuları getir
       else if (userDoc.role === 'academician') {
         appointments = await AppointmentModel.find({ academianId: userData.id })
-          .populate('studentId'); // Öğrenci bilgilerini almak için
+          .populate('studentId');
       }
 
       if (!appointments.length) {
@@ -273,25 +255,20 @@ app.post('/appointments', async (req, res) => {
   }
 
   try {
-    // JWT'den kullanıcı bilgilerini al
     const userData = jwt.verify(token, jwtSecret);
 
-    // Talep eden kullanıcıyı bul
     const student = await StudentModel.findById(userData.id);
     if (!student) {
       return res.status(404).json('Student not found.');
     }
 
-    // Randevu oluştur
     const newAppointment = await AppointmentModel.create({
       studentId: student.id,
       academianId: academianId,
-      date: {
-        day,
-        slot,
-      },
+      start,
+      end,
       description,
-      status: 'pending', // Varsayılan olarak "onay bekliyor"
+      status: 'pending',
     });
 
     res.status(201).json(newAppointment);
@@ -300,8 +277,7 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while creating the appointment.' });
   }
 });
-
-// Randevu durumunu güncelleme
+//TO DO update must be update
 app.patch('/appointments/:id', async (req, res) => {
   const { token } = req.cookies;
   const { status } = req.body;
@@ -317,28 +293,20 @@ app.patch('/appointments/:id', async (req, res) => {
     }
 
     try {
-      // Akademisyen bilgilerini al
       const userDoc = await AcademianModel.findById(userData.id);
       if (!userDoc) {
         return res.status(404).json('User not found.');
       }
-
-      // Randevuyu bul
       const appointment = await AppointmentModel.findById(id);
       if (!appointment) {
         return res.status(404).json('Appointment not found.');
       }
-
-      // Randevunun sahibi akademisyen mi?
       if (appointment.academianId.toString() !== userData.id) {
         return res.status(403).json('You do not have permission to update this appointment.');
       }
-
-      // Randevu durumunu güncelle
       appointment.status = status;
       await appointment.save();
 
-      // Eğer randevu kabul edildiyse, saat aralığını sil
       if (status === 'accepted') {
         await CalendarModel.updateOne(
           { academian: userData.id, 'availability.day': appointment.date.day },

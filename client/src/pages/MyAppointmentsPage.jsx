@@ -20,7 +20,6 @@ export default function MyAppointmentsPage() {
         setLoading(false);
       }
     };
-
     fetchAppointments();
   }, []);
 
@@ -30,7 +29,6 @@ export default function MyAppointmentsPage() {
 
   const isAcademician = user?.role === 'academician';
 
-  // Randevuları durumlarına göre filtrele
   const pendingAppointments = appointments.filter(app => app.status === 'pending');
   const acceptedAppointments = appointments.filter(app => app.status === 'accepted');
   const rejectedAppointments = appointments.filter(app => app.status === 'rejected');

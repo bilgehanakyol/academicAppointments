@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const appointmentSchema = new mongoose.Schema({
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
     academianId: { type: mongoose.Schema.Types.ObjectId, ref: 'Academian', required: true },
-    date: {
-        day: { type: String, required: true },
-        slot: { type: String, required: true },
-      },
-    status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+    start: { type: Date, required: true },
+    end: { type: Date, required: true },
+    status: { type: String, 
+              enum: ['pending', 'accepted', 'rejected'],
+              default: 'pending' },
     description: { type: String }
   });
   

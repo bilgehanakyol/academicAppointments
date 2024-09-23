@@ -6,7 +6,6 @@ import AvailabilityTable from '../components/AvailabilityTable';
 export default function AppointmentsPage() {
   const [availabilities, setAvailabilities] = useState({});
 
-  // Günlere göre müsaitlik ekleme işlevi
   const addAvailability = (day, timeSlots) => {
     setAvailabilities((prevAvailabilities) => ({
       ...prevAvailabilities,

@@ -57,7 +57,6 @@ export default function TimeSlotForm({ onAddAvailability }) {
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto mb-8">
       <h3 className="text-xl font-semibold mb-4 text-gray-700">Add New Time Slots</h3>
-
       <div className="mb-4">
         <label className="block text-gray-700 font-medium">Day:</label>
         <select
@@ -74,7 +73,6 @@ export default function TimeSlotForm({ onAddAvailability }) {
           ))}
         </select>
       </div>
-
       <div className="mb-4 grid grid-cols-2 gap-4">
         <div>
           <label className="block text-gray-700 font-medium">Start time:</label>
@@ -86,7 +84,6 @@ export default function TimeSlotForm({ onAddAvailability }) {
             required
           />
         </div>
-
         <div>
           <label className="block text-gray-700 font-medium">End Time:</label>
           <input
@@ -98,7 +95,6 @@ export default function TimeSlotForm({ onAddAvailability }) {
           />
         </div>
       </div>
-
       <div className="mb-4">
         <label className="block text-gray-700 font-medium">Enter slot interval (minutes):</label>
         <input
@@ -112,7 +108,6 @@ export default function TimeSlotForm({ onAddAvailability }) {
           placeholder="Enter slot duration (e.g., 15)"
         />
       </div>
-
       <button
         type="submit"
         className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
