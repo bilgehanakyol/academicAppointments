@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { addAvailability } from '../availability';
+import axios from 'axios';
 import { UserContext } from './UserContext';
 
 const daysOfWeek = [
@@ -12,6 +12,7 @@ const daysOfWeek = [
   'Sunday',
 ];
 
+// Zaman dilimleri hesaplama fonksiyonu
 const timeSlots = (startTime, endTime, interval) => {
   const slots = [];
   let currentTime = new Date(`1970-01-01T${startTime}:00`);
@@ -34,13 +35,26 @@ export default function TimeSlotForm({ onAddAvailability }) {
   const [interval, setInterval] = useState(15);
   const { user } = useContext(UserContext);
 
+  // Yeni zaman dilimlerini ekleme
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedDay && startTime && endTime && interval > 0 && user) {
       const slots = timeSlots(startTime, endTime, interval);
 
       try {
-        await addAvailability(selectedDay, slots, user._id);
+        // Randevu oluşturmak için API çağrısı
+        const appointmentPromises = slots.map(slot => {
+          return axios.post(`/appointments/${user._id}/add-slots`, {
+            //studentId: user._id, // Öğrenci kimliği
+            academianId: user.academianId, // Akademisyenin kimliği (gerekirse UserContext'ten al)
+            date: selectedDay,
+            startTime: slot.date,
+            endTime: slot.date // Burada startTime ve endTime kullanılması gerekebilir
+          });
+        });
+
+        await Promise.all(appointmentPromises);
+
         alert('Availability added successfully!');
         setSelectedDay('');
         setStartTime('');
@@ -85,7 +99,7 @@ export default function TimeSlotForm({ onAddAvailability }) {
           />
         </div>
         <div>
-          <label className="block text-gray-700 font-medium">End Time:</label>
+          <label className="block text-gray-700 font-medium">End time:</label>
           <input
             type="time"
             value={endTime}
@@ -96,23 +110,21 @@ export default function TimeSlotForm({ onAddAvailability }) {
         </div>
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium">Enter slot interval (minutes):</label>
+        <label className="block text-gray-700 font-medium">Interval (minutes):</label>
         <input
           type="number"
           value={interval}
           onChange={(e) => setInterval(Number(e.target.value))}
+          min="1"
           className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
           required
-          min="5"
-          step="5"
-          placeholder="Enter slot duration (e.g., 15)"
         />
       </div>
       <button
         type="submit"
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200"
       >
-        Add Time Slots
+        Add Availability
       </button>
     </form>
   );

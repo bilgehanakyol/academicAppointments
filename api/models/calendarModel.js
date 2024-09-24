@@ -11,7 +11,7 @@ const CalendarSchema = new Schema({
       isAvailable: { type: Boolean, default: true }
     }]
   }],
-});
+}, { timestamps: true });
 
 const CalendarModel = mongoose.model('Calendar', CalendarSchema);
 export default CalendarModel;
