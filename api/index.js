@@ -181,9 +181,8 @@ app.get('/availability/:academianId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.delete('/availability/:academianId/:day', async (req, res) => {
-  const { academianId, day } = req.params;
-  const { start, end } = req.body; // { start: Date, end: Date }
+app.delete('/availability/:academianId/:slotId', async (req, res) => {
+  const { academianId, slotId } = req.params;
 
   try {
     const calendar = await CalendarModel.findOne({ academian: academianId });
@@ -191,19 +190,31 @@ app.delete('/availability/:academianId/:day', async (req, res) => {
       return res.status(404).json({ message: 'Calendar not found' });
     }
 
-    const dayIndex = calendar.availability.findIndex(d => d.day === day);
-    if (dayIndex > -1) {
-      calendar.availability[dayIndex].slots = calendar.availability[dayIndex].slots.filter(slot => {
-        return !(slot.start === start && slot.end === end);
+    let found = false;
+
+    calendar.availability.forEach(day => {
+      day.slots = day.slots.filter(slot => {
+        const isSlotDeleted = slot._id.toString() === slotId;
+        if (isSlotDeleted) found = true;
+        return !isSlotDeleted;
       });
+    });
+
+    if (!found) {
+      return res.status(404).json({ message: 'Slot not found' });
     }
 
     await calendar.save();
-    res.status(200).json({ message: 'Availability deleted successfully', calendar });
+    res.status(200).json({ message: 'Slot deleted successfully', calendar });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+
+
+
 
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;
