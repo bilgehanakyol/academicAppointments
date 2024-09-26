@@ -9,7 +9,7 @@ export const addAvailability = async (day, timeSlots, academianId) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Müsaitlik eklenirken bir hata oluştu:', error);
+    console.error('An error occured:', error);
     throw error;
   }
 };
