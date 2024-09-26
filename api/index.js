@@ -211,6 +211,25 @@ app.delete('/availability/:academianId/:slotId', async (req, res) => {
   }
 });
 
+// app.post('/appointments', async (req, res) => {
+//   const { academianId, day, slot, description } = req.body;
+
+//   try {
+//     const appointment = new AppointmentModel({
+//       academian: academianId,
+//       day,
+//       slot,
+//       description,
+//       student: req.user._id, 
+//     });
+//     await appointment.save();
+
+//     res.status(201).json({ message: 'Randevu talebi başarıyla oluşturuldu!' });
+//   } catch (error) {
+//     console.error('Randevu talebi oluşturulurken hata:', error);
+//     res.status(500).json({ message: 'Randevu talebi oluşturulamadı' });
+//   }
+// });
 
 
 
@@ -261,27 +280,66 @@ app.get('/my-appointments', async (req, res) => {
   });
 });
 
+app.post('/appointments', async (req, res) => {
+  const { token } = req.cookies; // Cookie'den token al
+  if (!token) {
+    return res.status(401).json({ message: 'Token bulunamadı' });
+  }
+
+  try {
+    const userData = jwt.verify(token, jwtSecret); // Token doğrula
+    const { id: studentId } = userData; // Kullanıcı ID'sini al
+
+    const { academianId, date, startTime, endTime, description } = req.body;
+
+    // Randevu nesnesi oluştur
+    const newAppointment = new AppointmentModel({
+      studentId, // Kullanıcının ID'si
+      academianId,
+      date,
+      startTime,
+      endTime,
+      description,
+    });
+
+    // Randevuyu kaydet
+    await newAppointment.save();
+    res.status(201).json({ message: 'Randevu başarıyla oluşturuldu', appointment: newAppointment });
+  } catch (error) {
+    console.error('Randevu oluşturulurken hata:', error);
+    res.status(500).json({ message: 'Randevu oluşturulurken hata oluştu' });
+  }
+});
+
+
+
 // app.post('/appointments', async (req, res) => {
 //   const { token } = req.cookies;
-//   const { academianId, start, end, description } = req.body;
-  
+//   const { academianId, day, slot, description } = req.body;
+
 //   if (!token) {
 //     return res.status(401).json('Unauthorized');
 //   }
 
 //   try {
 //     const userData = jwt.verify(token, jwtSecret);
-
 //     const student = await StudentModel.findById(userData.id);
 //     if (!student) {
 //       return res.status(404).json('Student not found.');
 //     }
 
+//     // Slot'u "09:00 - 10:00" gibi ayırarak start ve end oluşturuluyor
+//     const [startTime, endTime] = slot.split(' - ');
+
+//     // Gün bilgisini kullanarak doğru tarih oluşturuluyor
+//     const appointmentDate = new Date(day);
+
 //     const newAppointment = await AppointmentModel.create({
-//       studentId: student.id,
+//       studentId: student._id,
 //       academianId: academianId,
-//       start: new Date(start),
-//       end: new Date(end),
+//       date: appointmentDate,
+//       startTime,
+//       endTime,
 //       description,
 //       status: 'pending',
 //     });
@@ -292,6 +350,7 @@ app.get('/my-appointments', async (req, res) => {
 //     res.status(500).json({ error: 'An error occurred while creating the appointment.' });
 //   }
 // });
+
 // //TO DO update must be update
 // app.patch('/appointments/:id', async (req, res) => {
 //   const { token } = req.cookies;
@@ -361,7 +420,7 @@ app.post('/appointments:userId/add-slots', async (req, res) => {
 });
 
 // Tüm randevuları listeleme (akademisyen bazında)
-app.get('/appointments/academian/:academianId', async (req, res) => {
+app.get('/appointments/:academianId', async (req, res) => {
   const { academianId } = req.params;
 
   try {
@@ -436,27 +495,27 @@ app.get('/calendar/:academianId', async (req, res) => {
 });
 
 // Randevu durumu güncelleme (akademisyen bazında)
-app.patch('/appointments/status/:id', async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
+// app.patch('/appointments/status/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const { status } = req.body;
 
-  try {
-    const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+//   try {
+//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
+//       id,
+//       { status },
+//       { new: true }
+//     );
 
-    if (!updatedAppointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
-    }
+//     if (!updatedAppointment) {
+//       return res.status(404).json({ message: 'Appointment not found' });
+//     }
 
-    res.status(200).json(updatedAppointment);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error updating appointment status' });
-  }
-});
+//     res.status(200).json(updatedAppointment);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error updating appointment status' });
+//   }
+// });
 
 mongoose
   .connect(mongoDBURL)

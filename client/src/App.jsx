@@ -14,6 +14,7 @@ import CreateAppointmentPage from './pages/CreateAppointmentPage';
 import ControlCalendar from './components/ControlCalendar';
 import AppointmentForm from './pages/AppointmentFormPage';
 import AvailabilityManager from './components/AvailabilityManager';
+import CalendarView from './components/CalendarView';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -28,9 +29,9 @@ function App() {
       <Route path='/profile' element={<ProfilePage />} />
       <Route path='/appointments' element={<AvailabilityManager />} />
       <Route path='/my-appointments' element={<MyAppointmentsPage />} />
-      <Route path="/create-appointment" element={<AppointmentForm />} />
+      <Route path="/create-appointment" element={<CreateAppointmentPage />} />
       <Route path='/academicians' element={<AcademiciansPage />}/>
-      <Route path="calendar/:id" element={<CalendarPage />} />
+      <Route path="calendar/:academianId" element={<CalendarView />} />
       </Routes>
     </UserContextProvider>
   );
