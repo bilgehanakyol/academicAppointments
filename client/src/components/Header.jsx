@@ -46,7 +46,7 @@ export default function Header() {
             <Link to="/my-appointments" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">
               My Appointments
             </Link>
-            <Link to="/my-appointments" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">
+            <Link to="/students" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">
               Students
             </Link>
           </>

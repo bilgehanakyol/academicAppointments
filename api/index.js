@@ -424,6 +424,34 @@ app.get('/calendar/:academianId', async (req, res) => {
   }
 });
 
+//Student
+app.get('/students', async (req, res) => {
+  try {
+    const students = await StudentModel.find();
+    res.status(200).json(students);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    res.status(500).json({ message: 'Öğrenciler getirilirken hata oluştu' });
+  }
+});
+app.get('/students/search', async (req, res) => {
+  const { studentNo } = req.query;
+
+  try {
+    const student = await StudentModel.findOne({ studentNo });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Öğrenci bulunamadı' });
+    }
+
+    res.status(200).json(student);
+  } catch (error) {
+    console.error('Error searching for student:', error);
+    res.status(500).json({ message: 'Öğrenci aranırken hata oluştu' });
+  }
+});
+
+
 mongoose
   .connect(mongoDBURL)
   .then(() => {
