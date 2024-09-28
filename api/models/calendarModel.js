@@ -6,8 +6,8 @@ const CalendarSchema = new Schema({
   availability: [{
     day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], required: true },
     slots: [{ 
-      start: { type: Date, required: true }, 
-      end: { type: Date, required: true },   
+      start: { type: String, required: true }, 
+      end: { type: String, required: true },   
       isAvailable: { type: Boolean, default: true }
     }]
   }],

@@ -210,31 +210,6 @@ app.delete('/availability/:academianId/:slotId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// app.post('/appointments', async (req, res) => {
-//   const { academianId, day, slot, description } = req.body;
-
-//   try {
-//     const appointment = new AppointmentModel({
-//       academian: academianId,
-//       day,
-//       slot,
-//       description,
-//       student: req.user._id, 
-//     });
-//     await appointment.save();
-
-//     res.status(201).json({ message: 'Randevu talebi başarıyla oluşturuldu!' });
-//   } catch (error) {
-//     console.error('Randevu talebi oluşturulurken hata:', error);
-//     res.status(500).json({ message: 'Randevu talebi oluşturulamadı' });
-//   }
-// });
-
-
-
-
-
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;
 
@@ -281,25 +256,43 @@ app.get('/my-appointments', async (req, res) => {
 });
 
 app.post('/appointments', async (req, res) => {
-  const { token } = req.cookies; // Cookie'den token al
+  const { token } = req.cookies; 
   if (!token) {
     return res.status(401).json({ message: 'Token bulunamadı' });
   }
 
   try {
-    const userData = jwt.verify(token, jwtSecret); // Token doğrula
-    const { id: studentId } = userData; // Kullanıcı ID'sini al
+    const userData = jwt.verify(token, jwtSecret); 
+    const { id: studentId } = userData; 
 
     const { academianId, date, startTime, endTime, description } = req.body;
 
+    // Randevu başlangıç ve bitiş zamanlarını oluştur
+    const startDateTime = new Date(`${date}T${startTime}:00Z`);
+    const endDateTime = new Date(`${date}T${endTime}:00Z`);
+
+    // Aynı zaman diliminde başka bir kabul edilmiş randevu var mı kontrol et
+    const existingAppointment = await AppointmentModel.findOne({
+      academianId,
+      startTime: { $lt: endDateTime }, // Randevu bitişi mevcutdan küçük
+      endTime: { $gt: startDateTime }, // Randevu başlangıcı mevcutdan büyük
+      isAvailable: false // Sadece kabul edilmiş randevuları kontrol et
+    });
+
+    if (existingAppointment) {
+      console.log('Çakışan randevu bulundu:', existingAppointment);
+      return res.status(400).json({ message: 'Bu zaman dilimi başka bir randevu ile çakışıyor.' });
+    }
+
     // Randevu nesnesi oluştur
     const newAppointment = new AppointmentModel({
-      studentId, // Kullanıcının ID'si
+      studentId, 
       academianId,
       date,
       startTime,
       endTime,
       description,
+      isAvailable: false // Varsayılan olarak isAvailable değerini false yap
     });
 
     // Randevuyu kaydet
@@ -310,46 +303,6 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ message: 'Randevu oluşturulurken hata oluştu' });
   }
 });
-
-
-
-// app.post('/appointments', async (req, res) => {
-//   const { token } = req.cookies;
-//   const { academianId, day, slot, description } = req.body;
-
-//   if (!token) {
-//     return res.status(401).json('Unauthorized');
-//   }
-
-//   try {
-//     const userData = jwt.verify(token, jwtSecret);
-//     const student = await StudentModel.findById(userData.id);
-//     if (!student) {
-//       return res.status(404).json('Student not found.');
-//     }
-
-//     // Slot'u "09:00 - 10:00" gibi ayırarak start ve end oluşturuluyor
-//     const [startTime, endTime] = slot.split(' - ');
-
-//     // Gün bilgisini kullanarak doğru tarih oluşturuluyor
-//     const appointmentDate = new Date(day);
-
-//     const newAppointment = await AppointmentModel.create({
-//       studentId: student._id,
-//       academianId: academianId,
-//       date: appointmentDate,
-//       startTime,
-//       endTime,
-//       description,
-//       status: 'pending',
-//     });
-
-//     res.status(201).json(newAppointment);
-//   } catch (error) {
-//     console.error('Error creating appointment:', error);
-//     res.status(500).json({ error: 'An error occurred while creating the appointment.' });
-//   }
-// });
 
 // //TO DO update must be update
 // app.patch('/appointments/:id', async (req, res) => {
@@ -395,29 +348,6 @@ app.post('/appointments', async (req, res) => {
 //     }
 //   });
 // });
-//student: studentId,
-//studentId,
-//status: 'pending', // Varsayılan olarak "pending"
-app.post('/appointments:userId/add-slots', async (req, res) => {
-  const {  academianId, date, startTime, endTime } = req.body;
-
-  try {
-    const appointment = new AppointmentModel({
-      
-      academian: academianId,
-      date,
-      startTime,
-      endTime,
-      
-    });
-
-    await appointment.save();
-    res.status(201).json({ message: 'Appointment created successfully', appointment });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating appointment' });
-  }
-});
 
 // Tüm randevuları listeleme (akademisyen bazında)
 app.get('/appointments/:academianId', async (req, res) => {
@@ -493,29 +423,6 @@ app.get('/calendar/:academianId', async (req, res) => {
     res.status(500).json({ message: 'Error fetching calendar' });
   }
 });
-
-// Randevu durumu güncelleme (akademisyen bazında)
-// app.patch('/appointments/status/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const { status } = req.body;
-
-//   try {
-//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-//       id,
-//       { status },
-//       { new: true }
-//     );
-
-//     if (!updatedAppointment) {
-//       return res.status(404).json({ message: 'Appointment not found' });
-//     }
-
-//     res.status(200).json(updatedAppointment);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Error updating appointment status' });
-//   }
-// });
 
 mongoose
   .connect(mongoDBURL)
