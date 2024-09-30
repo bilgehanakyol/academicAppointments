@@ -14,6 +14,5 @@ const appointmentSchema = new mongoose.Schema({
     isAvailable: { type: Boolean, default: true }
   });
   
-
 const AppointmentModel = mongoose.model('Appointment', appointmentSchema);
 export default AppointmentModel;

@@ -21,6 +21,8 @@ const CalendarView = () => {
         const appointmentsResponse = await axios.get(`/appointments/${academianId}`);
         const appointments = appointmentsResponse.data;
 
+
+        //hata buradan calendar ava!!!!!! TODO
         // Akademisyenin müsaitlik bilgilerinin alınması
         const availabilityResponse = await axios.get(`/calendar/${academianId}`);
         const availability = availabilityResponse.data.availability;

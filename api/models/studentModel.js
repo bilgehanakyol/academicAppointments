@@ -10,8 +10,11 @@ const StudentSchema = new Schema({
   role: { type: String, default: 'student' },
   department: { type: String, required: true },
   qrCode: { type: String },
+  resetPasswordToken: String,
+	resetPasswordExpiresAt: Date,
+	verificationToken: String,
+	verificationTokenExpiresAt: Date,
 });
 
 const StudentModel = mongoose.model('Student', StudentSchema);
-
 export default StudentModel;

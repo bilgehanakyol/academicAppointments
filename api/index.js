@@ -441,7 +441,7 @@ app.get('/students/search', async (req, res) => {
     const student = await StudentModel.findOne({ studentNo });
 
     if (!student) {
-      return res.status(404).json({ message: 'Öğrenci bulunamadı' });
+      return res.status(404).json({ message: 'Student not found' });
     }
 
     res.status(200).json(student);
@@ -450,7 +450,6 @@ app.get('/students/search', async (req, res) => {
     res.status(500).json({ message: 'Öğrenci aranırken hata oluştu' });
   }
 });
-
 
 mongoose
   .connect(mongoDBURL)

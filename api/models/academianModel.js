@@ -10,6 +10,10 @@ const academianSchema = new mongoose.Schema({
   department: String,
   calendar: { type: mongoose.Schema.Types.ObjectId, ref: 'Calendar' },
   qrCode: { type: String },
+  resetPasswordToken: String,
+	resetPasswordExpiresAt: Date,
+	verificationToken: String,
+	verificationTokenExpiresAt: Date,
 });
 
 const AcademianModel = mongoose.model('Academian', academianSchema);
