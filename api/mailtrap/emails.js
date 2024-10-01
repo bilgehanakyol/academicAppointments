@@ -41,7 +41,8 @@ export const sendWelcomeEmail = async (email, name) => {
     }
 };
 
-export const sendPasswordResetEmail = async (email, resetURL) => {
+export const sendPasswordResetEmail = async (email, resetToken) => {
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`; // Tam URL'yi oluştur
     const recipient = [{ email }];
 
     try { 
@@ -49,15 +50,14 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
             from: sender,
             to: recipient,
             subject: "Reset your password.",
-            html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
+            html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL), // URL'yi gönder
             category: "Password Reset",
-        })
+        });
     } catch (error) {
-        console.log("error sending password reset email", error);
-        throw new Error(`error sending password reset email: ${error}`);
+        console.log("Error sending password reset email", error);
+        throw new Error(`Error sending password reset email: ${error}`);
     }
 };
-
 export const sendResetSuccessEmail = async (email) => {
     const recipient = [{ email }];
 

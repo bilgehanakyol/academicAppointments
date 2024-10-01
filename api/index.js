@@ -260,54 +260,130 @@ if (!userDoc) {
     res.status(500).json('Internal server error');
   }
 });
-app.get('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
-    if (!user) {return res.status(400).json({success:false, message:"User not found."});}
-    //Generate reset token
-    const resetToken = crypto.randomBytes(15).toString("hex");
-    const resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+// app.get('/forgot-password', async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
+//     if (!user) {return res.status(400).json({success:false, message:"User not found."});}
+//     //Generate reset token
+//     const resetToken = crypto.randomBytes(15).toString("hex");
+//     const resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
 
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiresAt = resetPasswordExpiresAt;
+//     user.resetPasswordToken = resetToken;
+//     user.resetPasswordExpiresAt = resetPasswordExpiresAt;
 
-    await user.save();
+//     await user.save();
 
-    await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
-    res.status(200).json({succes:true, message:"password reset link sent to your email"})
-  } catch (error) {
+//     await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+//     res.status(200).json({succes:true, message:"password reset link sent to your email"})
+//   } catch (error) {
     
-  } 
-});
-app.get('/reset-password', async (req, res) => {
-  try {
-    const {token} = req.params;
-    const {password} = req.body;
+//   } 
+// });
+// app.post('/reset-password/:token', async (req, res) => {
+//   const { token } = req.params; // URL'den token al
+//   const { password } = req.body;
 
-    const user = 
-    await StudentModel.findOne({ resetPasswordToken: token, 
-      resetPasswordExpiresAt: { $gt: Date.now()} }) || 
-    await AcademianModel.findOne({ resetPasswordToken: token, 
-      resetPasswordExpiresAt: { $gt: Date.now()} });
+//   try {
+//     const user = 
+//       await StudentModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } }) || 
+//       await AcademianModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } });
     
-      if (!user) { 
-        return res.status(400).json({ success: false, message: "Invalid or expired reset token."});
-    }
+//     if (!user) {
+//       return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+//     }
 
-    const hashedPassword = await bcrypt.hash(password, 3);
-    user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpiresAt = undefined;
-    await user.save();
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     user.password = hashedPassword;
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpiresAt = undefined;
+//     await user.save();
 
-    await sendResetSuccessEmail(user.email);
-    res.status(200).json({success:true, message:"password reset successfully"});
-  } catch (error) {
-    console.log("error in reset password",error);
-    res.status(400).json({success:false, message:error.message});
+//     await sendResetSuccessEmail(user.email);
+//     res.status(200).json({ success: true, message: "Password reset successfully" });
+//   } catch (error) {
+//     console.log("Error in reset password", error);
+//     res.status(400).json({ success: false, message: error.message });
+//   }
+// });
+// app.post('/request-reset', async (req, res) => {
+//   const { email } = req.body;
+
+//   try {
+//     const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
+    
+//     if (!user) {
+//       return res.status(400).json({ success: false, message: "Email not found." });
+//     }
+
+//     // Sıfırlama token'ı ve süresi oluşturun
+//     const resetToken = Math.random().toString(36).substr(2);
+//     user.resetPasswordToken = resetToken;
+//     user.resetPasswordExpiresAt = Date.now() + 3600000; // 1 saat geçerli
+//     await user.save();
+
+//     // Mail gönderim fonksiyonunu çağırın
+//     await sendPasswordResetEmail(user.email, resetToken);
+
+//     res.json({ success: true, message: "Reset link sent to your email!" });
+//   } catch (err) {
+//     console.error("Error in /request-reset:", err); // Hata konsola yazdırılır
+//     res.status(500).json({ success: false, message: "Internal server error." });
+//   }
+// });
+app.post('/request-reset', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+      const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
+      
+      if (!user) {
+          return res.status(400).json({ success: false, message: "Email not found." });
+      }
+
+      // Sıfırlama token'ı ve süresi oluşturun
+      const resetToken = Math.random().toString(36).substr(2);
+      user.resetPasswordToken = resetToken;
+      user.resetPasswordExpiresAt = Date.now() + 3600000; // 1 saat geçerli
+      await user.save();
+
+      // Mail gönderim fonksiyonunu çağırın
+      await sendPasswordResetEmail(user.email, resetToken);
+
+      res.json({ success: true, message: "Reset link sent to your email!" });
+  } catch (err) {
+      console.error("Error in /request-reset:", err); // Hata konsola yazdırılır
+      res.status(500).json({ success: false, message: "Internal server error." });
   }
-})
+});
+
+app.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params; // URL'den token al
+  const { password } = req.body; // Yeni şifreyi al
+
+  try {
+      const user = 
+          await StudentModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } }) || 
+          await AcademianModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } });
+
+      if (!user) {
+          return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined; // Token'ı sıfırla
+      user.resetPasswordExpiresAt = undefined; // Süreyi sıfırla
+      await user.save();
+
+      await sendResetSuccessEmail(user.email); // Başarılı sıfırlama e-postası gönder
+      res.status(200).json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+      console.log("Error in reset password", error);
+      res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 app.get('/profile', (req, res) => {
   const { token } = req.cookies;
   if (token) {

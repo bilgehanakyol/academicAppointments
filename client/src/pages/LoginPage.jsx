@@ -54,7 +54,7 @@ export default function LoginPage() {
                     </div>
                     <div className="text-center py-2 text-gray-500">
                         Do you forget your password?   
-                        <Link className="underline text-bn" to={"/password-reset"}> Reset Password</Link> 
+                        <Link className="underline text-bn" to={"/reset-password"}> Reset Password</Link> 
                     </div>
                 </form>
             </div>

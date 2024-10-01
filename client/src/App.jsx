@@ -7,16 +7,15 @@ import axios from "axios";
 import ProfilePage from './pages/ProfilePage';
 import { UserContextProvider } from './components/UserContext';
 import AcademiciansPage from './pages/AcademicianPage';
-import AppointmentsPage from './pages/AppointmentsPage';
-import CalendarPage from './components/Calendar';
 import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import CreateAppointmentPage from './pages/CreateAppointmentPage';
-import ControlCalendar from './components/ControlCalendar';
-import AppointmentForm from './pages/AppointmentFormPage';
 import AvailabilityManager from './components/AvailabilityManager';
 import CalendarView from './components/CalendarView';
 import StudentSearch from './pages/StudentsPage';
 import EmailVerificationPage from './pages/VerificationPage';
+import ForgotPasswordPage from './pages/ResetPasswordPage';
+import EmailResetPage from './pages/EmailResetPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -36,6 +35,8 @@ function App() {
       <Route path="calendar/:academianId" element={<CalendarView />} />
       <Route path="/students" element={<StudentSearch />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />
+      <Route path="/request-reset" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       </Routes>
     </UserContextProvider>
   );
