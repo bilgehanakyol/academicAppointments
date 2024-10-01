@@ -16,6 +16,7 @@ import AppointmentForm from './pages/AppointmentFormPage';
 import AvailabilityManager from './components/AvailabilityManager';
 import CalendarView from './components/CalendarView';
 import StudentSearch from './pages/StudentsPage';
+import EmailVerificationPage from './pages/VerificationPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -34,6 +35,7 @@ function App() {
       <Route path='/academicians' element={<AcademiciansPage />}/>
       <Route path="calendar/:academianId" element={<CalendarView />} />
       <Route path="/students" element={<StudentSearch />} />
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
       </Routes>
     </UserContextProvider>
   );

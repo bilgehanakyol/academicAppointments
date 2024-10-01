@@ -1,18 +1,20 @@
 import express from "express";
-import { PORT, mongoDBURL, jwtSecret } from "./config.js";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
-import QRCode from 'qrcode';
+import crypto from "crypto";
+import { PORT, jwtSecret } from "./config.js";
 import StudentModel from './models/studentModel.js';
 import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
 import cookieParser from "cookie-parser"; 
 import CalendarModel from "./models/calendarModel.js";
 import { connectDB } from "./db/connectdb.js";
-import { sendVerificationEmail } from "./mailtrap/emails.js";
+import { sendPasswordResetEmail,
+	sendResetSuccessEmail,
+	sendVerificationEmail,
+	sendWelcomeEmail, } from "./mailtrap/emails.js";
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(8);
@@ -47,6 +49,7 @@ app.post('/register', async (req, res) => {
         name,
         surname,
         email,
+        password,
         department,
         role,
         studentNo,
@@ -59,6 +62,7 @@ app.post('/register', async (req, res) => {
         name,
         surname,
         email,
+        password,
         department,
         role,
         verificationToken,
@@ -93,8 +97,8 @@ app.post('/register', async (req, res) => {
     res.status(422).json(e.message || 'An error occurred');
   }
 });
-app.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
+app.post('/verify-email', async (req, res) => {
+  const { token } = req.body; // Artık sadece doğrulama kodunu alıyoruz
 
   try {
     const userDoc = await StudentModel.findOne({ verificationToken: token }) || await AcademianModel.findOne({ verificationToken: token });
@@ -107,21 +111,56 @@ app.get('/verify-email', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Verification token expired' });
     }
 
-    // Kullanıcıyı doğrula ve şifreyi güncelle
+    // Kullanıcıyı doğrula
     userDoc.isVerified = true;
-    userDoc.password = bcrypt.hashSync(req.body.password, bcryptSalt);  // Şifreyi şimdi oluştur
-    userDoc.verificationToken = undefined;  // Tokeni temizle
+    const hashedPassword = await bcrypt.hash(userDoc.password, 10); // Şifreyi hash'le
+    userDoc.password = hashedPassword; // Hash'lenmiş şifreyi kaydet
+    userDoc.verificationToken = undefined;
     userDoc.verificationTokenExpiresAt = undefined;
     await userDoc.save();
 
-    await sendWelcomeEmail(userDoc.email, userDoc.name);
-
-    res.json({ success: true, message: 'Email verified. You can now log in.' });
+    res.json({ success: true, message: 'Email verified successfully' });
   } catch (e) {
     console.error(e);
     res.status(500).json({ success: false, message: 'An error occurred' });
   }
 });
+// app.post('/verify-email', async (req, res) => {
+//   const { code } = req.body;
+
+//   try {
+//     // Kullanıcıyı hem öğrenci hem de akademisyen modellerinde arıyoruz
+//     const userDoc = await StudentModel.findOne({ 
+// 			verificationToken: code,
+// 			verificationTokenExpiresAt: { $gt: Date.now() },
+//     }) || await AcademianModel.findOne({ 
+//       verificationToken: code,
+// 			verificationTokenExpiresAt: { $gt: Date.now() },
+//     });
+
+//     if (!userDoc) {
+//       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+//     }
+
+//     if (userDoc.verificationTokenExpiresAt < Date.now()) {
+//       return res.status(400).json({ success: false, message: 'Verification token expired' });
+//     }
+
+//     // Kullanıcıyı doğrula
+//     userDoc.isVerified = true;
+//     userDoc.verificationToken = undefined;  // Tokeni temizle
+//     userDoc.verificationTokenExpiresAt = undefined;
+//     await userDoc.save();
+
+//     await sendWelcomeEmail(userDoc.email, userDoc.name);
+
+//     res.json({ success: true, message: 'Email verified. You can now log in.' });
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({ success: false, message: 'An error occurred' });
+//   }
+// });
+
 
 
 // app.post('/register', async (req, res) => {
@@ -186,9 +225,13 @@ app.post('/login', async (req, res) => {
   
   try {
     let userDoc = await StudentModel.findOne({ email });
-    if (!userDoc) {
-      userDoc = await AcademianModel.findOne({ email });
-    }
+if (!userDoc) {
+  userDoc = await AcademianModel.findOne({ email });
+}
+
+if (!userDoc) {
+  return res.status(400).json({ success: false, message: "Invalid credentials." });
+}
 
     if (userDoc) {
       const passOk = bcrypt.compareSync(password, userDoc.password);
@@ -217,6 +260,54 @@ app.post('/login', async (req, res) => {
     res.status(500).json('Internal server error');
   }
 });
+app.get('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
+    if (!user) {return res.status(400).json({success:false, message:"User not found."});}
+    //Generate reset token
+    const resetToken = crypto.randomBytes(15).toString("hex");
+    const resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = resetPasswordExpiresAt;
+
+    await user.save();
+
+    await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+    res.status(200).json({succes:true, message:"password reset link sent to your email"})
+  } catch (error) {
+    
+  } 
+});
+app.get('/reset-password', async (req, res) => {
+  try {
+    const {token} = req.params;
+    const {password} = req.body;
+
+    const user = 
+    await StudentModel.findOne({ resetPasswordToken: token, 
+      resetPasswordExpiresAt: { $gt: Date.now()} }) || 
+    await AcademianModel.findOne({ resetPasswordToken: token, 
+      resetPasswordExpiresAt: { $gt: Date.now()} });
+    
+      if (!user) { 
+        return res.status(400).json({ success: false, message: "Invalid or expired reset token."});
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 3);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
+
+    await sendResetSuccessEmail(user.email);
+    res.status(200).json({success:true, message:"password reset successfully"});
+  } catch (error) {
+    console.log("error in reset password",error);
+    res.status(400).json({success:false, message:error.message});
+  }
+})
 app.get('/profile', (req, res) => {
   const { token } = req.cookies;
   if (token) {
