@@ -6,7 +6,7 @@ const StudentSchema = new Schema({
   surname: { type: String, required: true },
   studentNo: { type: String, unique: true, required: true }, 
   email: { type: String, unique: true, required: true },
-  password: { type: String, required: true }, 
+  password: { type: String, required: undefined }, 
   role: { type: String, default: 'student' },
   department: { type: String, required: true },
   qrCode: { type: String },
@@ -14,6 +14,7 @@ const StudentSchema = new Schema({
 	resetPasswordExpiresAt: Date,
 	verificationToken: String,
 	verificationTokenExpiresAt: Date,
+  isVerified: { type: Boolean, default: false },  // Doğrulama durumu
 });
 
 const StudentModel = mongoose.model('Student', StudentSchema);

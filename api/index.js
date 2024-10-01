@@ -1,6 +1,7 @@
 import express from "express";
 import { PORT, mongoDBURL, jwtSecret } from "./config.js";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
@@ -10,6 +11,8 @@ import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
 import cookieParser from "cookie-parser"; 
 import CalendarModel from "./models/calendarModel.js";
+import { connectDB } from "./db/connectdb.js";
+import { sendVerificationEmail } from "./mailtrap/emails.js";
 
 const app = express();
 const bcryptSalt = bcrypt.genSaltSync(8);
@@ -20,6 +23,7 @@ app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174'], 
   credentials: true 
 }));
+dotenv.config();
 
 app.get('/', (req, res) => {
   res.send('Hello from API!');
@@ -28,8 +32,14 @@ app.get('/', (req, res) => {
 app.post('/register', async (req, res) => {
   const { name, surname, email, password, role, department, studentNo } = req.body;
 
+  const studentAlreadyExists = await StudentModel.findOne({ email });
+  const academianAlreadyExists = await AcademianModel.findOne({ email });
+  if (studentAlreadyExists || academianAlreadyExists) {
+    return res.status(400).json({ success: false, message: "User already exists" });
+  }
+
   try {
-    const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     let userDoc;
 
     if (role === 'student') {
@@ -37,19 +47,23 @@ app.post('/register', async (req, res) => {
         name,
         surname,
         email,
-        password: hashedPassword,
         department,
         role,
-        studentNo
+        studentNo,
+        verificationToken,
+        verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+        isVerified: false  // Doğrulanmamış olarak kaydedilecek
       });
     } else if (role === 'academician') {
       userDoc = await AcademianModel.create({
         name,
         surname,
         email,
-        password: hashedPassword,
-        role,
         department,
+        role,
+        verificationToken,
+        verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+        isVerified: false  // Doğrulanmamış olarak kaydedilecek
       });
 
       const defaultAvailability = [
@@ -70,18 +84,103 @@ app.post('/register', async (req, res) => {
       return res.status(400).json('Invalid role');
     }
 
-    const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
-    const qrCodeUrl = await QRCode.toDataURL(token);
+    // Kullanıcı kaydedildiğinde doğrulama kodunu e-posta ile gönder.
+    await sendVerificationEmail(userDoc.email, verificationToken);
 
-    userDoc.qrCode = qrCodeUrl;
-    await userDoc.save();
-
-    res.json(userDoc);
+    res.json({ success: true, message: 'Registration successful. Please verify your email.' });
   } catch (e) {
     console.error(e);
     res.status(422).json(e.message || 'An error occurred');
   }
 });
+app.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const userDoc = await StudentModel.findOne({ verificationToken: token }) || await AcademianModel.findOne({ verificationToken: token });
+
+    if (!userDoc) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+    }
+
+    if (userDoc.verificationTokenExpiresAt < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Verification token expired' });
+    }
+
+    // Kullanıcıyı doğrula ve şifreyi güncelle
+    userDoc.isVerified = true;
+    userDoc.password = bcrypt.hashSync(req.body.password, bcryptSalt);  // Şifreyi şimdi oluştur
+    userDoc.verificationToken = undefined;  // Tokeni temizle
+    userDoc.verificationTokenExpiresAt = undefined;
+    await userDoc.save();
+
+    await sendWelcomeEmail(userDoc.email, userDoc.name);
+
+    res.json({ success: true, message: 'Email verified. You can now log in.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+});
+
+
+// app.post('/register', async (req, res) => {
+//   const { name, surname, email, password, role, department, studentNo } = req.body;
+
+//   try {
+//     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
+//     let userDoc;
+
+//     if (role === 'student') {
+//       userDoc = await StudentModel.create({
+//         name,
+//         surname,
+//         email,
+//         password: hashedPassword,
+//         department,
+//         role,
+//         studentNo
+//       });
+//     } else if (role === 'academician') {
+//       userDoc = await AcademianModel.create({
+//         name,
+//         surname,
+//         email,
+//         password: hashedPassword,
+//         role,
+//         department,
+//       });
+
+//       const defaultAvailability = [
+//         { day: 'Monday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
+//         { day: 'Tuesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
+//         { day: 'Wednesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
+//         { day: 'Thursday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
+//         { day: 'Friday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
+//         { day: 'Saturday', slots: [] },
+//         { day: 'Sunday', slots: [] }
+//       ];
+
+//       await CalendarModel.create({
+//         academian: userDoc._id,
+//         availability: defaultAvailability,
+//       });
+//     } else {
+//       return res.status(400).json('Invalid role');
+//     }
+
+//     const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
+//     const qrCodeUrl = await QRCode.toDataURL(token);
+
+//     userDoc.qrCode = qrCodeUrl;
+//     await userDoc.save();
+
+//     res.json(userDoc);
+//   } catch (e) {
+//     console.error(e);
+//     res.status(422).json(e.message || 'An error occurred');
+//   }
+// });
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -451,14 +550,18 @@ app.get('/students/search', async (req, res) => {
   }
 });
 
-mongoose
-  .connect(mongoDBURL)
-  .then(() => {
-    console.log('App connected to the database.');
-    app.listen(PORT, () => {
-      console.log(`App listening on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error('Error connecting to database:', error);
-  });
+// mongoose
+//   .connect(mongoDBURL)
+//   .then(() => {
+//     console.log('App connected to the database.');
+//     app.listen(PORT, () => {
+//       console.log(`App listening on port ${PORT}`);
+//     });
+//   })
+//   .catch((error) => {
+//     console.error('Error connecting to database:', error);
+//   });
+app.listen(PORT, () => {
+  connectDB();
+  console.log('Server is running PORT 5555');
+});
