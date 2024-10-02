@@ -8,6 +8,7 @@ import { PORT, jwtSecret } from "./config.js";
 import StudentModel from './models/studentModel.js';
 import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
+import AppointmentRequestTemplateModel from "./models/AppointmentRequestTemplate.js";
 import cookieParser from "cookie-parser"; 
 import CalendarModel from "./models/calendarModel.js";
 import { connectDB } from "./db/connectdb.js";
@@ -125,101 +126,7 @@ app.post('/verify-email', async (req, res) => {
     res.status(500).json({ success: false, message: 'An error occurred' });
   }
 });
-// app.post('/verify-email', async (req, res) => {
-//   const { code } = req.body;
 
-//   try {
-//     // Kullanıcıyı hem öğrenci hem de akademisyen modellerinde arıyoruz
-//     const userDoc = await StudentModel.findOne({ 
-// 			verificationToken: code,
-// 			verificationTokenExpiresAt: { $gt: Date.now() },
-//     }) || await AcademianModel.findOne({ 
-//       verificationToken: code,
-// 			verificationTokenExpiresAt: { $gt: Date.now() },
-//     });
-
-//     if (!userDoc) {
-//       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
-//     }
-
-//     if (userDoc.verificationTokenExpiresAt < Date.now()) {
-//       return res.status(400).json({ success: false, message: 'Verification token expired' });
-//     }
-
-//     // Kullanıcıyı doğrula
-//     userDoc.isVerified = true;
-//     userDoc.verificationToken = undefined;  // Tokeni temizle
-//     userDoc.verificationTokenExpiresAt = undefined;
-//     await userDoc.save();
-
-//     await sendWelcomeEmail(userDoc.email, userDoc.name);
-
-//     res.json({ success: true, message: 'Email verified. You can now log in.' });
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ success: false, message: 'An error occurred' });
-//   }
-// });
-
-
-
-// app.post('/register', async (req, res) => {
-//   const { name, surname, email, password, role, department, studentNo } = req.body;
-
-//   try {
-//     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
-//     let userDoc;
-
-//     if (role === 'student') {
-//       userDoc = await StudentModel.create({
-//         name,
-//         surname,
-//         email,
-//         password: hashedPassword,
-//         department,
-//         role,
-//         studentNo
-//       });
-//     } else if (role === 'academician') {
-//       userDoc = await AcademianModel.create({
-//         name,
-//         surname,
-//         email,
-//         password: hashedPassword,
-//         role,
-//         department,
-//       });
-
-//       const defaultAvailability = [
-//         { day: 'Monday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-//         { day: 'Tuesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-//         { day: 'Wednesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-//         { day: 'Thursday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-//         { day: 'Friday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-//         { day: 'Saturday', slots: [] },
-//         { day: 'Sunday', slots: [] }
-//       ];
-
-//       await CalendarModel.create({
-//         academian: userDoc._id,
-//         availability: defaultAvailability,
-//       });
-//     } else {
-//       return res.status(400).json('Invalid role');
-//     }
-
-//     const token = jwt.sign({ id: userDoc._id, email: userDoc.email }, jwtSecret);
-//     const qrCodeUrl = await QRCode.toDataURL(token);
-
-//     userDoc.qrCode = qrCodeUrl;
-//     await userDoc.save();
-
-//     res.json(userDoc);
-//   } catch (e) {
-//     console.error(e);
-//     res.status(422).json(e.message || 'An error occurred');
-//   }
-// });
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -276,61 +183,10 @@ if (!userDoc) {
 
 //     await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
 //     res.status(200).json({succes:true, message:"password reset link sent to your email"})
-//   } catch (error) {
-    
+//   } catch (error) {  
 //   } 
 // });
-// app.post('/reset-password/:token', async (req, res) => {
-//   const { token } = req.params; // URL'den token al
-//   const { password } = req.body;
 
-//   try {
-//     const user = 
-//       await StudentModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } }) || 
-//       await AcademianModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } });
-    
-//     if (!user) {
-//       return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     user.password = hashedPassword;
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpiresAt = undefined;
-//     await user.save();
-
-//     await sendResetSuccessEmail(user.email);
-//     res.status(200).json({ success: true, message: "Password reset successfully" });
-//   } catch (error) {
-//     console.log("Error in reset password", error);
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// });
-// app.post('/request-reset', async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
-    
-//     if (!user) {
-//       return res.status(400).json({ success: false, message: "Email not found." });
-//     }
-
-//     // Sıfırlama token'ı ve süresi oluşturun
-//     const resetToken = Math.random().toString(36).substr(2);
-//     user.resetPasswordToken = resetToken;
-//     user.resetPasswordExpiresAt = Date.now() + 3600000; // 1 saat geçerli
-//     await user.save();
-
-//     // Mail gönderim fonksiyonunu çağırın
-//     await sendPasswordResetEmail(user.email, resetToken);
-
-//     res.json({ success: true, message: "Reset link sent to your email!" });
-//   } catch (err) {
-//     console.error("Error in /request-reset:", err); // Hata konsola yazdırılır
-//     res.status(500).json({ success: false, message: "Internal server error." });
-//   }
-// });
 app.post('/request-reset', async (req, res) => {
   const { email } = req.body;
 
@@ -372,8 +228,8 @@ app.post('/reset-password/:token', async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
-      user.resetPasswordToken = undefined; // Token'ı sıfırla
-      user.resetPasswordExpiresAt = undefined; // Süreyi sıfırla
+      user.resetPasswordToken = undefined; 
+      user.resetPasswordExpiresAt = undefined; 
       await user.save();
 
       await sendResetSuccessEmail(user.email); // Başarılı sıfırlama e-postası gönder
@@ -716,18 +572,34 @@ app.get('/students/search', async (req, res) => {
     res.status(500).json({ message: 'Öğrenci aranırken hata oluştu' });
   }
 });
+//TO DO: it must be tested
+app.get('/appointment-templates', async (req, res) => {
+  try {
+    const templates = await AppointmentRequestTemplateModel.find();
+    res.status(200).json({ success: true, templates });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch templates", error });
+  }
+});
+app.post('/add-appointment-template', async (req, res) => {
+  const { title, content } = req.body;
 
-// mongoose
-//   .connect(mongoDBURL)
-//   .then(() => {
-//     console.log('App connected to the database.');
-//     app.listen(PORT, () => {
-//       console.log(`App listening on port ${PORT}`);
-//     });
-//   })
-//   .catch((error) => {
-//     console.error('Error connecting to database:', error);
-//   });
+  if (!title || !content) {
+    return res.status(400).json({ success: false, message: "Title and content are required." });
+  }
+
+  try {
+    const newTemplate = new AppointmentRequestTemplateModel({ title, content });
+    await newTemplate.save();
+    res.status(200).json({ success: true, message: "Template added successfully." });
+  } catch (error) {
+    console.error("Error adding template:", error); // Hata mesajını logla
+    res.status(500).json({ success: false, message: "Server error, could not add template." });
+  }
+});
+
+
+
 app.listen(PORT, () => {
   connectDB();
   console.log('Server is running PORT 5555');
