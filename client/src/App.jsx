@@ -16,6 +16,8 @@ import EmailVerificationPage from './pages/VerificationPage';
 import AddTemplatePage from './pages/AddAppointmentTemplate';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import EmailResetPage from './pages/EmailResetPage';
+import AppointmentDetails from './components/AppointmentDetails';
+import StudentSearchPage from './components/StudentSearchPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
@@ -31,9 +33,10 @@ function App() {
       <Route path='/appointments' element={<AvailabilityManager />} />
       <Route path='/my-appointments' element={<MyAppointmentsPage />} />
       <Route path="/create-appointment" element={<CreateAppointmentPage />} />
+      <Route path="/appointments/students/:studentId/academians/:academianId" element={<AppointmentDetails />} />
       <Route path='/academicians' element={<AcademiciansPage />}/>
       <Route path="calendar/:academianId" element={<CalendarView />} />
-      <Route path="/students" element={<StudentSearch />} />
+      <Route path="/students" element={<StudentSearchPage />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/request-reset" element={<EmailResetPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />

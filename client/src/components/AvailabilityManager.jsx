@@ -177,18 +177,18 @@ const AvailabilityManager = () => {
   return (
     <div className="p-4">
       <BackButton />
-      <h2 className="text-2xl font-semibold mb-4">Müsaitlik Yönetimi</h2>
+      <h2 className="text-2xl font-semibold mb-4">Availability Manager</h2>
 
       <div className="mb-4 flex items-center">
         <select onChange={handleDayChange} value={selectedDay} className="border rounded p-2 mr-2">
-          <option value="">Gün Seç</option>
-          <option value="Monday">Pazartesi</option>
-          <option value="Tuesday">Salı</option>
-          <option value="Wednesday">Çarşamba</option>
-          <option value="Thursday">Perşembe</option>
-          <option value="Friday">Cuma</option>
-          <option value="Saturday">Cumartesi</option>
-          <option value="Sunday">Pazar</option>
+          <option value="">Choose a day</option>
+          <option value="Monday">Monday</option>
+          <option value="Tuesday">Tuesday</option>
+          <option value="Wednesday">Wednesday</option>
+          <option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option>
+          <option value="Saturday">Saturday</option>
+          <option value="Sunday">Sunday</option>
         </select>
         <input
           type="time"
@@ -221,12 +221,19 @@ const AvailabilityManager = () => {
         onSelectEvent={handleDeleteSlot}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 500 }}
+        style={{ height: 800 }}
         views={['week']}
         defaultView="week"
         min={new Date(0, 0, 0, 7, 0, 0)}
         max={new Date(0, 0, 0, 23, 0, 0)}
         step={15}
+        timeslots={4}
+        timeFormat="HH:mm"
+        formats={{
+          timeGutterFormat: 'HH:mm',  // Saatler 24 saatlik formatta
+          eventTimeRangeFormat: ({ start, end }) =>
+            `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
+        }}
       />
     </div>
   );

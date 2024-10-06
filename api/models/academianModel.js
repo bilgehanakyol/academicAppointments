@@ -14,7 +14,7 @@ const academianSchema = new mongoose.Schema({
 	resetPasswordExpiresAt: Date,
 	verificationToken: String,
 	verificationTokenExpiresAt: Date,
-  isVerified: { type: Boolean, default: false },  // Doğrulama durumu
+  isVerified: { type: Boolean, default: false },  
 });
 
 const AcademianModel = mongoose.model('Academian', academianSchema);

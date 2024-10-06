@@ -30,8 +30,8 @@ export default function MyAppointmentsPage() {
   const isAcademician = user?.role === 'academician';
 
   const pendingAppointments = appointments.filter(app => app.status === 'pending');
-  const acceptedAppointments = appointments.filter(app => app.status === 'accepted');
-  const rejectedAppointments = appointments.filter(app => app.status === 'rejected');
+  const acceptedAppointments = appointments.filter(app => app.status === 'confirmed');
+  const rejectedAppointments = appointments.filter(app => app.status === 'cancelled');
 
   return (
     <div className="p-4">
