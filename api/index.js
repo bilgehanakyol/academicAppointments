@@ -18,7 +18,7 @@ import { sendPasswordResetEmail,
 	sendWelcomeEmail, } from "./mailtrap/emails.js";
 
 const app = express();
-const bcryptSalt = bcrypt.genSaltSync(8);
+//const bcryptSalt = bcrypt.genSaltSync(8);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -56,7 +56,7 @@ app.post('/register', async (req, res) => {
         studentNo,
         verificationToken,
         verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        isVerified: false  // Doğrulanmamış olarak kaydedilecek
+        isVerified: false 
       });
     } else if (role === 'academician') {
       userDoc = await AcademianModel.create({
@@ -68,7 +68,7 @@ app.post('/register', async (req, res) => {
         role,
         verificationToken,
         verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        isVerified: false  // Doğrulanmamış olarak kaydedilecek
+        isVerified: false 
       });
 
       const defaultAvailability = [
@@ -387,7 +387,7 @@ app.post('/appointments', async (req, res) => {
     const userData = jwt.verify(token, jwtSecret); 
     const { id: studentId } = userData; 
 
-    const { academianId, date, startTime, endTime, description } = req.body;
+    const { academianId, date, startTime, endTime, description, notes } = req.body;
 
     // Randevu başlangıç ve bitiş zamanlarını oluştur
     const startDateTime = new Date(`${date}T${startTime}:00Z`);
@@ -398,7 +398,6 @@ app.post('/appointments', async (req, res) => {
       academianId,
       startTime: { $lt: endDateTime }, // Randevu bitişi mevcutdan küçük
       endTime: { $gt: startDateTime }, // Randevu başlangıcı mevcutdan büyük
-      isAvailable: false // Sadece kabul edilmiş randevuları kontrol et
     });
 
     if (existingAppointment) {
@@ -414,7 +413,8 @@ app.post('/appointments', async (req, res) => {
       startTime,
       endTime,
       description,
-      isAvailable: false // Varsayılan olarak isAvailable değerini false yap
+      isAvailable,
+      notes
     });
 
     // Randevuyu kaydet
@@ -425,50 +425,38 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ message: 'Randevu oluşturulurken hata oluştu' });
   }
 });
-
-// //TO DO update must be update
-// app.patch('/appointments/:id', async (req, res) => {
-//   const { token } = req.cookies;
-//   const { status } = req.body;
+//TO DO akademisyen takvimini blokluyor
+// Get a single appointment description
+// app.get('/appointments/:id', async (req, res) => {
 //   const { id } = req.params;
 
-//   if (!token) {
-//     return res.status(401).json('Unauthorized');
+//   try {
+//     const appointment = await AppointmentModel.findById(id);
+//     if (!appointment) {
+//       return res.status(404).json({ message: 'Appointment not found' });
+//     }
+//     res.status(200).json(appointment);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error fetching appointment' });
 //   }
+// });
 
-//   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-//     if (err) {
-//       return res.status(403).json('Invalid token');
+//Appointment description update
+// app.patch('/appointments/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const { notes } = req.body;
+//   try {
+//     const appointment = await AppointmentModel.findById(id);
+//     if (!appointment) {
+//       return res.status(404).json({ message: 'Appointment not found' });
 //     }
-
-//     try {
-//       const userDoc = await AcademianModel.findById(userData.id);
-//       if (!userDoc) {
-//         return res.status(404).json('User not found.');
-//       }
-//       const appointment = await AppointmentModel.findById(id);
-//       if (!appointment) {
-//         return res.status(404).json('Appointment not found.');
-//       }
-//       if (appointment.academianId.toString() !== userData.id) {
-//         return res.status(403).json('You do not have permission to update this appointment.');
-//       }
-//       appointment.status = status;
-//       await appointment.save();
-
-//       if (status === 'accepted') {
-//         await CalendarModel.updateOne(
-//           { academian: userData.id, 'availability.day': appointment.date.day },
-//           { $pull: { 'availability.$.slots': { date: appointment.date.slot } } }
-//         );
-//       }
-
-//       res.json(appointment);
-//     } catch (error) {
-//       console.error('Error updating appointment:', error);
-//       res.status(500).json({ error: 'An error occurred while updating the appointment.' });
-//     }
-//   });
+//     appointment.notes = notes;
+//     await appointment.save();
+//     res.status(200).json({message: 'Appointment description updated successfully', appointment});
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error updating appointment description' });
+//   }
 // });
 
 // Tüm randevuları listeleme (akademisyen bazında)
@@ -493,24 +481,52 @@ app.patch('/appointments/:id', async (req, res) => {
   const { status } = req.body;
 
   try {
-    const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    // Randevuyu bul
+    const appointment = await AppointmentModel.findById(id);
 
-    if (!updatedAppointment) {
+    if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
 
-    res.status(200).json(updatedAppointment);
+    // Eğer randevunun isAvailable değeri false ise hata döndür
+    //TODO: isAvalible durumunun calendardan yönetimi
+    if (!appointment.isAvailable && status === 'confirmed') {
+      return res.status(400).json({ message: 'This appointment is no longer available' });
+    }
+
+    // Randevunun statusunu güncelle
+    appointment.status = status;
+
+    // Eğer randevu kabul ediliyorsa (status: confirmed), isAvailable'ı false yap
+    if (status === 'confirmed') {
+      appointment.isAvailable = false;
+      // İlgili akademisyenin takvimini bul
+      const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
+
+      if (!calendar) {
+        return res.status(404).json({ message: 'Calendar not found' });
+      }
+
+      // Takvimdeki ilgili slotu bul ve isAvailable'ı false yap
+      const updatedSlots = calendar.availability.map((day) => {
+        return day.slots.map((slot) => {
+          if (slot.start === appointment.startTime && slot.end === appointment.endTime) {
+            slot.isAvailable = false;
+          }
+          return slot;
+        });
+      });
+
+      calendar.availability.forEach(day => day.slots = updatedSlots);
+      await calendar.save();
+    }
+    await appointment.save();
+    return res.status(200).json({ message: 'Appointment updated successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error updating appointment' });
+    return res.status(500).json({ message: 'Error updating appointment', error });
   }
 });
 
-// Randevu silme
 app.delete('/appointments/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -527,8 +543,29 @@ app.delete('/appointments/:id', async (req, res) => {
     res.status(500).json({ message: 'Error deleting appointment' });
   }
 });
+app.get('/appointments/students/:studentId/academians/:academianId', async (req, res) => {
+  const { studentId, academianId } = req.params;
 
-// Akademisyenin takvimini görüntüleme
+  try {
+    // Veritabanında öğrenci ve akademisyen id'leri ile eşleşen tüm randevuları buluyoruz
+    const appointments = await AppointmentModel.find({
+      studentId: studentId,
+      academianId: academianId,
+      status: 'confirmed' 
+    });
+
+    if (appointments.length === 0) {
+      return res.status(404).json({ message: 'No appointments found for this student and academician.' });
+    }
+
+    return res.status(200).json(appointments);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    return res.status(500).json({ message: 'Error fetching appointments', error });
+  }
+});
+
+// get the academian calendar
 app.get('/calendar/:academianId', async (req, res) => {
   const { academianId } = req.params;
 
@@ -597,8 +634,6 @@ app.post('/add-appointment-template', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error, could not add template." });
   }
 });
-
-
 
 app.listen(PORT, () => {
   connectDB();
