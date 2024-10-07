@@ -1,8 +1,8 @@
 import './App.css'
-import RegisterPage from './pages/RegisterPage'
-import {Routes, Route} from 'react-router-dom'
+import RegisterPage from './pages/auth/RegisterPage'
+import { Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
+import LoginPage from './pages/auth/LoginPage';
 import axios from "axios";
 import ProfilePage from './pages/ProfilePage';
 import { UserContextProvider } from './components/UserContext';
@@ -11,13 +11,12 @@ import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import CreateAppointmentPage from './pages/CreateAppointmentPage';
 import AvailabilityManager from './components/AvailabilityManager';
 import CalendarView from './components/CalendarView';
-import StudentSearch from './pages/StudentsPage';
-import EmailVerificationPage from './pages/VerificationPage';
+import EmailVerificationPage from './pages/auth/VerificationPage';
 import AddTemplatePage from './pages/AddAppointmentTemplate';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import EmailResetPage from './pages/EmailResetPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import EmailResetPage from './pages/auth/EmailResetPage';
 import AppointmentDetails from './components/AppointmentDetails';
-import StudentSearchPage from './components/StudentSearchPage';
+import StudentSearchPage from './pages/StudentSearchPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;

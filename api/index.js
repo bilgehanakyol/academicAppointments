@@ -476,9 +476,60 @@ app.get('/appointments/:academianId', async (req, res) => {
 });
 
 // Randevu durumu güncelleme
-app.patch('/appointments/:id', async (req, res) => {
+// app.patch('/appointments/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const { status } = req.body;
+
+//   try {
+//     // Randevuyu bul
+//     const appointment = await AppointmentModel.findById(id);
+
+//     if (!appointment) {
+//       return res.status(404).json({ message: 'Appointment not found' });
+//     }
+
+//     // Eğer randevunun isAvailable değeri false ise hata döndür
+//     //TODO: isAvalible durumunun calendardan yönetimi
+//     if (!appointment.isAvailable && status === 'confirmed') {
+//       return res.status(400).json({ message: 'This appointment is no longer available' });
+//     }
+
+//     // Randevunun statusunu güncelle
+//     appointment.status = status;
+
+//     // Eğer randevu kabul ediliyorsa (status: confirmed), isAvailable'ı false yap
+//     if (status === 'confirmed') {
+//       appointment.isAvailable = false;
+//       // İlgili akademisyenin takvimini bul
+//       const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
+
+//       if (!calendar) {
+//         return res.status(404).json({ message: 'Calendar not found' });
+//       }
+
+//       // Takvimdeki ilgili slotu bul ve isAvailable'ı false yap
+//       const updatedSlots = calendar.availability.map((day) => {
+//         return day.slots.map((slot) => {
+//           if (slot.start === appointment.startTime && slot.end === appointment.endTime) {
+//             slot.isAvailable = false;
+//           }
+//           return slot;
+//         });
+//       });
+
+//       calendar.availability.forEach(day => day.slots = updatedSlots);
+//       await calendar.save();
+//     }
+//     await appointment.save();
+//     return res.status(200).json({ message: 'Appointment updated successfully' });
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Error updating appointment', error });
+//   }
+// });
+// Sadece randevunun notlarını güncellemek için yeni bir endpoint
+app.patch('/appointments/:id/notes', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { notes } = req.body; // Notes bilgisini al
 
   try {
     // Randevuyu bul
@@ -488,26 +539,46 @@ app.patch('/appointments/:id', async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
 
+    // Sadece notes alanını güncelle
+    appointment.notes = notes;
+
+    // Güncellemeyi kaydet
+    await appointment.save();
+
+    return res.status(200).json({ message: 'Notes updated successfully' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error updating notes', error });
+  }
+});
+// Sadece randevunun status'unu güncellemek için mevcut endpoint'i kullan
+app.patch('/appointments/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // Status bilgisini al
+
+  try {
+    const appointment = await AppointmentModel.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
     // Eğer randevunun isAvailable değeri false ise hata döndür
-    //TODO: isAvalible durumunun calendardan yönetimi
     if (!appointment.isAvailable && status === 'confirmed') {
       return res.status(400).json({ message: 'This appointment is no longer available' });
     }
 
-    // Randevunun statusunu güncelle
+    // Status alanını güncelle
     appointment.status = status;
 
-    // Eğer randevu kabul ediliyorsa (status: confirmed), isAvailable'ı false yap
+    // Eğer status confirmed ise isAvailable alanını false yap
     if (status === 'confirmed') {
       appointment.isAvailable = false;
-      // İlgili akademisyenin takvimini bul
       const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
 
       if (!calendar) {
         return res.status(404).json({ message: 'Calendar not found' });
       }
 
-      // Takvimdeki ilgili slotu bul ve isAvailable'ı false yap
       const updatedSlots = calendar.availability.map((day) => {
         return day.slots.map((slot) => {
           if (slot.start === appointment.startTime && slot.end === appointment.endTime) {
@@ -520,12 +591,14 @@ app.patch('/appointments/:id', async (req, res) => {
       calendar.availability.forEach(day => day.slots = updatedSlots);
       await calendar.save();
     }
+
     await appointment.save();
-    return res.status(200).json({ message: 'Appointment updated successfully' });
+    return res.status(200).json({ message: 'Appointment status updated successfully' });
   } catch (error) {
-    return res.status(500).json({ message: 'Error updating appointment', error });
+    return res.status(500).json({ message: 'Error updating appointment status', error });
   }
 });
+
 
 app.delete('/appointments/:id', async (req, res) => {
   const { id } = req.params;

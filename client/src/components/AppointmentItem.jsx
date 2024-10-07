@@ -30,7 +30,7 @@ export default function AppointmentItem({ appointment, isAcademician }) {
     try {
       // Only do this if the appointment is available
       if (appointment.isAvailable && newStatus === 'confirmed') {
-        await axios.patch(`/appointments/${appointment._id}`, { status: newStatus });
+        await axios.patch(`/appointments/${appointment._id}/status`, { status: newStatus });
         setStatus(newStatus);
       } else {
         alert('This appointment is no longer available.');
