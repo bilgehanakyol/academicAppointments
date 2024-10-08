@@ -8,6 +8,7 @@ export default function CreateAppointmentPage() {
   const day = searchParams.get('day');
   const slot = searchParams.get('slot');
   const academianId = searchParams.get('academianId');
+  const calendarSlotId = searchParams.get('slotId');
   const [description, setDescription] = useState('');
 
   // Slot formatı: 'HH:mm - HH:mm'
@@ -47,6 +48,7 @@ export default function CreateAppointmentPage() {
     try {
       await axios.post('/appointments', {
         academianId,
+        calendarSlotId,
         date: day,  // Gün bilgisi burada tarih formatında kullanılabilir
         startTime: slot.split('-')[0],  // Slot'un başlangıç saati
         endTime: slot.split('-')[1],  // Slot'un bitiş saati
@@ -66,12 +68,12 @@ export default function CreateAppointmentPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            Randevu Talep Et
+            Appointment Request
           </h2>
           <form onSubmit={handleSubmit}>    
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Gün: 
+                Day: 
               </label>
               <div className="bg-gray-100 p-3 rounded-md text-gray-600 mt-1">
                 {day}
@@ -79,7 +81,7 @@ export default function CreateAppointmentPage() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Saat: 
+                Time: 
               </label>
               <div className="bg-gray-100 p-3 rounded-md text-gray-600 mt-1">
                 {slot}
@@ -87,7 +89,7 @@ export default function CreateAppointmentPage() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Açıklama:
+                Description:
               </label>
               <textarea
                 className="border rounded-md p-3 w-full bg-gray-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
@@ -101,7 +103,7 @@ export default function CreateAppointmentPage() {
               type="submit"
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition shadow-md"
             >
-              Randevu Talep Et
+              Appointment Request
             </button>
           </form>
         </div>

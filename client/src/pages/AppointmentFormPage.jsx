@@ -25,7 +25,7 @@ export default function AppointmentForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
+    try {//TODO slotid ile ilgili bişiy var mı bak
       const response = await axios.post("/appointments", {
         academianId: selectedAcademian,
         start: `${date}T${startTime}:00`,

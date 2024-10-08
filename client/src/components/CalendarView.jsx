@@ -17,15 +17,13 @@ const CalendarView = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // Veritabanındaki randevuların alınması
-        const appointmentsResponse = await axios.get(`/appointments/${academianId}`);
-        const appointments = appointmentsResponse.data;
-
-
-        //hata buradan calendar ava!!!!!! TODO
         // Akademisyenin müsaitlik bilgilerinin alınması
         const availabilityResponse = await axios.get(`/calendar/${academianId}`);
         const availability = availabilityResponse.data.availability;
+
+        // Veritabanındaki randevuların alınması
+        const appointmentsResponse = await axios.get(`/appointments/${academianId}`);
+        const appointments = appointmentsResponse.data;
 
         const dayOfWeekMap = {
           "Monday": 1,
@@ -67,6 +65,7 @@ const CalendarView = () => {
             });
 
             return {
+              id: slot._id,
               start,
               end,
               title: isAvailable ? 'Available' : 'Unavailable',
@@ -91,7 +90,7 @@ const CalendarView = () => {
     const startTime = event.start.toISOString().split('T')[1].slice(0, 5);
     const endTime = event.end.toISOString().split('T')[1].slice(0, 5);
 
-    const url = `/create-appointment?day=${selectedDay}&slot=${startTime}-${endTime}&academianId=${academianId}`;
+    const url = `/create-appointment?day=${selectedDay}&slot=${startTime}-${endTime}&academianId=${academianId}&slotId=${event.id}`;
     navigate(url);
   };
 

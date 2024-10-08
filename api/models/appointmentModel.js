@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const appointmentSchema = new mongoose.Schema({
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: false },
     academianId: { type: mongoose.Schema.Types.ObjectId, ref: 'Academian', required: true },
+    calendarSlotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Calendar', required: true }, 
     date: { type: Date, required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
@@ -13,7 +14,6 @@ const appointmentSchema = new mongoose.Schema({
       default: 'pending' 
     },
     description: { type: String },
-    isAvailable: { type: Boolean, default: true },
     notes: { type: String },
   });
   

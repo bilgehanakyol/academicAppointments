@@ -71,15 +71,7 @@ app.post('/register', async (req, res) => {
         isVerified: false 
       });
 
-      const defaultAvailability = [
-        { day: 'Monday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-        { day: 'Tuesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-        { day: 'Wednesday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-        { day: 'Thursday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-        { day: 'Friday', slots: [{ start: new Date('09:00'), end: new Date('17:00'), isAvailable: true }] },
-        { day: 'Saturday', slots: [] },
-        { day: 'Sunday', slots: [] }
-      ];
+      const defaultAvailability = [];
 
       await CalendarModel.create({
         academian: userDoc._id,
@@ -89,8 +81,8 @@ app.post('/register', async (req, res) => {
       return res.status(400).json('Invalid role');
     }
 
-    // Kullanıcı kaydedildiğinde doğrulama kodunu e-posta ile gönder.
-    await sendVerificationEmail(userDoc.email, verificationToken);
+    // Not working because of mailtrap.
+    //await sendVerificationEmail(userDoc.email, verificationToken);
 
     res.json({ success: true, message: 'Registration successful. Please verify your email.' });
   } catch (e) {
@@ -99,19 +91,15 @@ app.post('/register', async (req, res) => {
   }
 });
 app.post('/verify-email', async (req, res) => {
-  const { token } = req.body; // Artık sadece doğrulama kodunu alıyoruz
-
+  const { token } = req.body; 
   try {
     const userDoc = await StudentModel.findOne({ verificationToken: token }) || await AcademianModel.findOne({ verificationToken: token });
-
     if (!userDoc) {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
     }
-
     if (userDoc.verificationTokenExpiresAt < Date.now()) {
       return res.status(400).json({ success: false, message: 'Verification token expired' });
     }
-
     // Kullanıcıyı doğrula
     userDoc.isVerified = true;
     const hashedPassword = await bcrypt.hash(userDoc.password, 10); // Şifreyi hash'le
@@ -126,7 +114,6 @@ app.post('/verify-email', async (req, res) => {
     res.status(500).json({ success: false, message: 'An error occurred' });
   }
 });
-
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -212,7 +199,6 @@ app.post('/request-reset', async (req, res) => {
       res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
-
 app.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params; // URL'den token al
   const { password } = req.body; // Yeni şifreyi al
@@ -239,7 +225,6 @@ app.post('/reset-password/:token', async (req, res) => {
       res.status(400).json({ success: false, message: error.message });
   }
 });
-
 app.get('/profile', (req, res) => {
   const { token } = req.cookies;
   if (token) {
@@ -334,20 +319,16 @@ app.delete('/availability/:academianId/:slotId', async (req, res) => {
 });
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;
-
   if (!token) {
     return res.status(401).json('Unauthorized');
   }
-
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     if (err) {
       return res.status(403).json('Invalid token');
     }
-
     try {
       let appointments;
       let userDoc;
-
       userDoc = await StudentModel.findById(userData.id);
       if (!userDoc) {
         userDoc = await AcademianModel.findById(userData.id);
@@ -359,16 +340,13 @@ app.get('/my-appointments', async (req, res) => {
         appointments = await AppointmentModel.find({ studentId: userData.id })
           .populate('academianId');
       }
-
       else if (userDoc.role === 'academician') {
         appointments = await AppointmentModel.find({ academianId: userData.id })
           .populate('studentId');
       }
-
       if (!appointments.length) {
         return res.status(404).json('No appointments found');
       }
-
       res.json(appointments);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -387,8 +365,8 @@ app.post('/appointments', async (req, res) => {
     const userData = jwt.verify(token, jwtSecret); 
     const { id: studentId } = userData; 
 
-    const { academianId, date, startTime, endTime, description, notes } = req.body;
-
+    const { academianId, calendarSlotId, date, startTime, endTime, description, notes } = req.body;
+    console.log('Veriler:', req.body);
     // Randevu başlangıç ve bitiş zamanlarını oluştur
     const startDateTime = new Date(`${date}T${startTime}:00Z`);
     const endDateTime = new Date(`${date}T${endTime}:00Z`);
@@ -409,11 +387,11 @@ app.post('/appointments', async (req, res) => {
     const newAppointment = new AppointmentModel({
       studentId, 
       academianId,
+      calendarSlotId,
       date,
       startTime,
       endTime,
       description,
-      isAvailable,
       notes
     });
 
@@ -425,39 +403,6 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ message: 'Randevu oluşturulurken hata oluştu' });
   }
 });
-//TO DO akademisyen takvimini blokluyor
-// Get a single appointment description
-// app.get('/appointments/:id', async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const appointment = await AppointmentModel.findById(id);
-//     if (!appointment) {
-//       return res.status(404).json({ message: 'Appointment not found' });
-//     }
-//     res.status(200).json(appointment);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Error fetching appointment' });
-//   }
-// });
-
-//Appointment description update
-// app.patch('/appointments/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const { notes } = req.body;
-//   try {
-//     const appointment = await AppointmentModel.findById(id);
-//     if (!appointment) {
-//       return res.status(404).json({ message: 'Appointment not found' });
-//     }
-//     appointment.notes = notes;
-//     await appointment.save();
-//     res.status(200).json({message: 'Appointment description updated successfully', appointment});
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error updating appointment description' });
-//   }
-// });
 
 // Tüm randevuları listeleme (akademisyen bazında)
 app.get('/appointments/:academianId', async (req, res) => {
@@ -475,57 +420,6 @@ app.get('/appointments/:academianId', async (req, res) => {
   }
 });
 
-// Randevu durumu güncelleme
-// app.patch('/appointments/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const { status } = req.body;
-
-//   try {
-//     // Randevuyu bul
-//     const appointment = await AppointmentModel.findById(id);
-
-//     if (!appointment) {
-//       return res.status(404).json({ message: 'Appointment not found' });
-//     }
-
-//     // Eğer randevunun isAvailable değeri false ise hata döndür
-//     //TODO: isAvalible durumunun calendardan yönetimi
-//     if (!appointment.isAvailable && status === 'confirmed') {
-//       return res.status(400).json({ message: 'This appointment is no longer available' });
-//     }
-
-//     // Randevunun statusunu güncelle
-//     appointment.status = status;
-
-//     // Eğer randevu kabul ediliyorsa (status: confirmed), isAvailable'ı false yap
-//     if (status === 'confirmed') {
-//       appointment.isAvailable = false;
-//       // İlgili akademisyenin takvimini bul
-//       const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
-
-//       if (!calendar) {
-//         return res.status(404).json({ message: 'Calendar not found' });
-//       }
-
-//       // Takvimdeki ilgili slotu bul ve isAvailable'ı false yap
-//       const updatedSlots = calendar.availability.map((day) => {
-//         return day.slots.map((slot) => {
-//           if (slot.start === appointment.startTime && slot.end === appointment.endTime) {
-//             slot.isAvailable = false;
-//           }
-//           return slot;
-//         });
-//       });
-
-//       calendar.availability.forEach(day => day.slots = updatedSlots);
-//       await calendar.save();
-//     }
-//     await appointment.save();
-//     return res.status(200).json({ message: 'Appointment updated successfully' });
-//   } catch (error) {
-//     return res.status(500).json({ message: 'Error updating appointment', error });
-//   }
-// });
 // Sadece randevunun notlarını güncellemek için yeni bir endpoint
 app.patch('/appointments/:id/notes', async (req, res) => {
   const { id } = req.params;
@@ -563,7 +457,8 @@ app.patch('/appointments/:id/status', async (req, res) => {
     }
 
     // Eğer randevunun isAvailable değeri false ise hata döndür
-    if (!appointment.isAvailable && status === 'confirmed') {
+    //TODO:     if (!appointment.isAvailable && status === 'confirmed') şeklindeydi takvimdeki isAvalibleye göre tekrar yaz
+    if (status === 'confirmed') {
       return res.status(400).json({ message: 'This appointment is no longer available' });
     }
 
@@ -572,7 +467,7 @@ app.patch('/appointments/:id/status', async (req, res) => {
 
     // Eğer status confirmed ise isAvailable alanını false yap
     if (status === 'confirmed') {
-      appointment.isAvailable = false;
+      //appointment.isAvailable = false; TODO: takvimdekine göre falsela
       const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
 
       if (!calendar) {

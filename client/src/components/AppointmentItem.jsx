@@ -28,16 +28,25 @@ export default function AppointmentItem({ appointment, isAcademician }) {
 
   const handleStatusChange = async (newStatus) => {
     try {
-      // Only do this if the appointment is available
-      if (appointment.isAvailable && newStatus === 'confirmed') {
+      if (newStatus === 'confirmed') {
+        // Randevu mevcutsa, 'confirmed' olarak güncelleyebiliriz
+        if (appointment.isAvailable) {
+          await axios.patch(`/appointments/${appointment._id}/status`, { status: newStatus });
+          setStatus(newStatus);
+        } else {
+          // Randevu mevcut değilse, durumu 'cancelled' olarak ayarla
+          alert('This appointment is no longer available. The status will be updated to cancelled.');
+          await axios.patch(`/appointments/${appointment._id}/status`, { status: 'cancelled' });
+          setStatus('cancelled');
+        }
+      } else if (newStatus === 'cancelled') {
+        // Durumu doğrudan 'cancelled' olarak güncelleyebiliriz
         await axios.patch(`/appointments/${appointment._id}/status`, { status: newStatus });
         setStatus(newStatus);
-      } else {
-        alert('This appointment is no longer available.');
       }
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Error updating appointment status.');
+      alert('An error occurred while updating the appointment status.');
     }
   };
 
@@ -50,6 +59,7 @@ export default function AppointmentItem({ appointment, isAcademician }) {
         <strong>{isAcademician ? 'Requested by:' : 'Academician:'}</strong> {isAcademician ? `${appointment.studentId.name} ${appointment.studentId.surname}` : `${appointment.academianId.name} ${appointment.academianId.surname}`}
       </p>
       <p><strong>Student No:</strong> {appointment.studentId.studentNo}</p>
+      <p><strong>Description:</strong> {appointment.description}</p>
       <p><strong>Status:</strong> {status}</p>
       {isAcademician && status === 'pending' && (
         <div className="mt-2">
