@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from '../components/BackButton';
@@ -10,20 +10,34 @@ export default function CreateAppointmentPage() {
   const academianId = searchParams.get('academianId');
   const calendarSlotId = searchParams.get('slotId');
   const [description, setDescription] = useState('');
+  const [templates, setTemplates] = useState([]); // Başlangıç durumu boş bir dizi
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
-  // Slot formatı: 'HH:mm - HH:mm'
-  const [startTime, endTime] = slot.split(' - ');
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const response = await axios.get('/appointment-templates');
+        console.log('API response:', response.data); // API yanıtını kontrol et
+        // Gelen veride templates alanını kullanarak state'i güncelle
+        setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
+      } catch (error) {
+        console.error('Şablonlar alınırken hata oluştu:', error);
+        setTemplates([]); // Hata durumunda templates'i boş bir diziye ayarla
+      }
+    };
+  
+    fetchTemplates();
+  }, []);
+  
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    // Değerlerin kontrolü
     if (!day || !slot) {
       alert('Gün veya saat bilgisi eksik. Lütfen doğru bilgileri kontrol edin.');
       return;
     }
-  
-    console.log('Submitting with day:', day, 'and slot:', slot); // Hata ayıklama için log
   
     const [startTime, endTime] = slot.split('-');
     if (!startTime || !endTime) {
@@ -31,36 +45,21 @@ export default function CreateAppointmentPage() {
       return;
     }
   
-    const appointmentDate = new Date(); // Bugünün tarihi
-    appointmentDate.setUTCHours(0, 0, 0, 0); // Sadece tarih kısmı
-  
-    // Start ve End zamanlarını oluştur
-    const start = new Date(appointmentDate);
-    const end = new Date(appointmentDate);
-  
-    // Başlangıç ve bitiş saatlerini ayarlayın
-    const [startHour, startMinute] = startTime.split(':');
-    const [endHour, endMinute] = endTime.split(':');
-  
-    start.setUTCHours(startHour, startMinute);
-    end.setUTCHours(endHour, endMinute);
-  
     try {
       await axios.post('/appointments', {
         academianId,
         calendarSlotId,
-        date: day,  // Gün bilgisi burada tarih formatında kullanılabilir
-        startTime: slot.split('-')[0],  // Slot'un başlangıç saati
-        endTime: slot.split('-')[1],  // Slot'un bitiş saati
+        date: day,
+        startTime: startTime.trim(),
+        endTime: endTime.trim(),
         description,
-    });
+      });
       alert('Randevu talebi başarıyla oluşturuldu!');
     } catch (error) {
       console.error('Randevu talebi oluşturulurken hata oluştu:', error);
       alert('Randevu talebi oluşturulurken hata oluştu. Lütfen tekrar deneyin.');
     }
   };
-  
 
   return (
     <div className="p-4">
@@ -70,7 +69,7 @@ export default function CreateAppointmentPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
             Appointment Request
           </h2>
-          <form onSubmit={handleSubmit}>    
+          <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
                 Day: 
@@ -89,7 +88,24 @@ export default function CreateAppointmentPage() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">
-                Description:
+                Description Template:
+              </label>
+              <select
+                className="border rounded-md p-3 w-full bg-gray-50"
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+              >
+                <option value="">Select a template</option>
+                {templates.map((template) => (
+                  <option key={template._id} value={template._id}>
+                    {template.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Additional Description:
               </label>
               <textarea
                 className="border rounded-md p-3 w-full bg-gray-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
