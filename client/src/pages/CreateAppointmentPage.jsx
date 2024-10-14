@@ -1,35 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from '../components/BackButton';
+import { UserContext } from '../components/UserContext';
 
 export default function CreateAppointmentPage() {
+  const { user } = useContext(UserContext);
   const [searchParams] = useSearchParams();
   const day = searchParams.get('day');
   const slot = searchParams.get('slot');
   const academianId = searchParams.get('academianId');
   const calendarSlotId = searchParams.get('slotId');
   const [description, setDescription] = useState('');
-  const [templates, setTemplates] = useState([]); // Başlangıç durumu boş bir dizi
+  const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         const response = await axios.get('/appointment-templates');
-        console.log('API response:', response.data); // API yanıtını kontrol et
-        // Gelen veride templates alanını kullanarak state'i güncelle
+        console.log('API response:', response.data);
         setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
       } catch (error) {
         console.error('Şablonlar alınırken hata oluştu:', error);
-        setTemplates([]); // Hata durumunda templates'i boş bir diziye ayarla
+        setTemplates([]);
       }
     };
   
     fetchTemplates();
   }, []);
   
-  
+  const handleTemplateChange = (e) => {
+    const selectedId = e.target.value;
+    setSelectedTemplateId(selectedId);
+
+    const selectedTemplate = templates.find((template) => template._id === selectedId);
+    if (selectedTemplate) {
+      setDescription(`${selectedTemplate.title}: ${selectedTemplate.content}`);
+    } else {
+      setDescription('');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +60,7 @@ export default function CreateAppointmentPage() {
       await axios.post('/appointments', {
         academianId,
         calendarSlotId,
+        studentNo: user.studentNo,
         date: day,
         startTime: startTime.trim(),
         endTime: endTime.trim(),
@@ -93,7 +105,7 @@ export default function CreateAppointmentPage() {
               <select
                 className="border rounded-md p-3 w-full bg-gray-50"
                 value={selectedTemplateId}
-                onChange={(e) => setSelectedTemplateId(e.target.value)}
+                onChange={handleTemplateChange}
               >
                 <option value="">Select a template</option>
                 {templates.map((template) => (

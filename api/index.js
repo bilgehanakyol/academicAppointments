@@ -154,25 +154,6 @@ if (!userDoc) {
     res.status(500).json('Internal server error');
   }
 });
-// app.get('/forgot-password', async (req, res) => {
-//   const { email } = req.body;
-//   try {
-//     const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
-//     if (!user) {return res.status(400).json({success:false, message:"User not found."});}
-//     //Generate reset token
-//     const resetToken = crypto.randomBytes(15).toString("hex");
-//     const resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
-
-//     user.resetPasswordToken = resetToken;
-//     user.resetPasswordExpiresAt = resetPasswordExpiresAt;
-
-//     await user.save();
-
-//     await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
-//     res.status(200).json({succes:true, message:"password reset link sent to your email"})
-//   } catch (error) {  
-//   } 
-// });
 
 app.post('/request-reset', async (req, res) => {
   const { email } = req.body;
@@ -185,14 +166,15 @@ app.post('/request-reset', async (req, res) => {
       }
 
       // Sıfırlama token'ı ve süresi oluşturun
-      const resetToken = Math.random().toString(36).substr(2);
+      const resetToken = crypto.randomBytes(15).toString("hex");
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpiresAt = Date.now() + 3600000; // 1 saat geçerli
       await user.save();
 
       // Mail gönderim fonksiyonunu çağırın
       await sendPasswordResetEmail(user.email, resetToken);
-
+//     await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+// ne fark olurdu?
       res.json({ success: true, message: "Reset link sent to your email!" });
   } catch (err) {
       console.error("Error in /request-reset:", err); // Hata konsola yazdırılır
@@ -366,7 +348,7 @@ app.post('/appointments', async (req, res) => {
     const { id: studentId } = userData; 
 
     const { academianId, calendarSlotId, date, startTime, endTime, description, notes } = req.body;
-    console.log('Veriler:', req.body);
+    //console.log('Veriler:', req.body);
     // Randevu başlangıç ve bitiş zamanlarını oluştur
     const startDateTime = new Date(`${date}T${startTime}:00Z`);
     const endDateTime = new Date(`${date}T${endTime}:00Z`);
@@ -382,7 +364,6 @@ app.post('/appointments', async (req, res) => {
       console.log('Çakışan randevu bulundu:', existingAppointment);
       return res.status(400).json({ message: 'Bu zaman dilimi başka bir randevu ile çakışıyor.' });
     }
-
     // Randevu nesnesi oluştur
     const newAppointment = new AppointmentModel({
       studentId, 
@@ -394,7 +375,6 @@ app.post('/appointments', async (req, res) => {
       description,
       notes
     });
-
     // Randevuyu kaydet
     await newAppointment.save();
     res.status(201).json({ message: 'Randevu başarıyla oluşturuldu', appointment: newAppointment });
