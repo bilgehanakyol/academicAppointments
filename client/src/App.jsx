@@ -33,7 +33,7 @@ function App() {
       <Route path='/my-appointments' element={<MyAppointmentsPage />} />
       <Route path="/create-appointment" element={<CreateAppointmentPage />} />
       <Route path="/appointments/students/:studentId/academians/:academianId" element={<AppointmentDetails />} />
-      <Route path='/academicians' element={<AcademiciansPage />}/>
+      <Route path='/academians' element={<AcademiciansPage />}/>
       <Route path="calendar/:academianId" element={<CalendarView />} />
       <Route path="/students" element={<StudentSearchPage />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />

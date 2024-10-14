@@ -31,7 +31,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         {user?.role === 'student' ? (
           <>
-            <Link to="/academicians" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">
+            <Link to="/academians" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">
               Academicians
             </Link>
             <Link to="/my-appointments" className="border px-4 py-2 rounded-full shadow-md hover:bg-gray-100">

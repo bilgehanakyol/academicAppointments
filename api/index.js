@@ -18,8 +18,9 @@ import { sendPasswordResetEmail,
 	sendWelcomeEmail, } from "./mailtrap/emails.js";
 
  import authRouter from "./routes/authRoutes.js";
- import calendarRouter from "./routes/calendarRoutes.js";
- import appointmentRouter from "./routes/appointmentRoutes.js";
+ import academianRouter from "./routes/academianRoutes.js";
+ //import calendarRouter from "./routes/calendarRoutes.js";
+ //import appointmentRouter from "./routes/appointmentRoutes.js";
 // import requestTemplateRouter from "./routes/requestTemplateRoutes.js";
 // import { verifyToken } from "./middleware/verifyToken.js";
 
@@ -34,81 +35,82 @@ app.use(cors({
 dotenv.config();
 
 app.use('/auth', authRouter);
+app.use('/academians', academianRouter);
 
 
-app.get('/academicians', async (req, res) => {
-  const academicians = await AcademianModel.find();
-  res.json(academicians);
-});
-app.post('/availability/:academianId', async (req, res) => {
-  const { academianId } = req.params;
-  const { availability } = req.body; 
-  try {
-    // Akademisyenin takvimini bul
-    let calendar = await CalendarModel.findOne({ academian: academianId });
+// app.get('/academicians', async (req, res) => {
+//   const academicians = await AcademianModel.find();
+//   res.json(academicians);
+// });
+// app.post('/availability/:academianId', async (req, res) => {
+//   const { academianId } = req.params;
+//   const { availability } = req.body; 
+//   try {
+//     // Akademisyenin takvimini bul
+//     let calendar = await CalendarModel.findOne({ academian: academianId });
 
-    // Eğer takvim yoksa yeni bir takvim oluştur
-    if (!calendar) {
-      calendar = new CalendarModel({ academian: academianId, availability: [] });
-    }
+//     // Eğer takvim yoksa yeni bir takvim oluştur
+//     if (!calendar) {
+//       calendar = new CalendarModel({ academian: academianId, availability: [] });
+//     }
 
-    // Müsaitlikleri güncelle
-    const dayIndex = calendar.availability.findIndex(d => d.day === availability.day);
-    if (dayIndex > -1) {
-      calendar.availability[dayIndex].slots.push(...availability.slots);
-    } else {
-      calendar.availability.push(availability);
-    }
+//     // Müsaitlikleri güncelle
+//     const dayIndex = calendar.availability.findIndex(d => d.day === availability.day);
+//     if (dayIndex > -1) {
+//       calendar.availability[dayIndex].slots.push(...availability.slots);
+//     } else {
+//       calendar.availability.push(availability);
+//     }
 
-    await calendar.save();
-    res.status(200).json({ message: 'Availability updated successfully', calendar });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-app.get('/availability/:academianId', async (req, res) => {
-  const { academianId } = req.params;
+//     await calendar.save();
+//     res.status(200).json({ message: 'Availability updated successfully', calendar });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+// app.get('/availability/:academianId', async (req, res) => {
+//   const { academianId } = req.params;
 
-  try {
-    const calendar = await CalendarModel.findOne({ academian: academianId });
-    if (!calendar) {
-      return res.status(404).json({ message: 'Calendar not found' });
-    }
+//   try {
+//     const calendar = await CalendarModel.findOne({ academian: academianId });
+//     if (!calendar) {
+//       return res.status(404).json({ message: 'Calendar not found' });
+//     }
 
-    res.status(200).json(calendar.availability);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-app.delete('/availability/:academianId/:slotId', async (req, res) => {
-  const { academianId, slotId } = req.params;
+//     res.status(200).json(calendar.availability);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+// app.delete('/availability/:academianId/:slotId', async (req, res) => {
+//   const { academianId, slotId } = req.params;
 
-  try {
-    const calendar = await CalendarModel.findOne({ academian: academianId });
-    if (!calendar) {
-      return res.status(404).json({ message: 'Calendar not found' });
-    }
+//   try {
+//     const calendar = await CalendarModel.findOne({ academian: academianId });
+//     if (!calendar) {
+//       return res.status(404).json({ message: 'Calendar not found' });
+//     }
 
-    let found = false;
+//     let found = false;
 
-    calendar.availability.forEach(day => {
-      day.slots = day.slots.filter(slot => {
-        const isSlotDeleted = slot._id.toString() === slotId;
-        if (isSlotDeleted) found = true;
-        return !isSlotDeleted;
-      });
-    });
+//     calendar.availability.forEach(day => {
+//       day.slots = day.slots.filter(slot => {
+//         const isSlotDeleted = slot._id.toString() === slotId;
+//         if (isSlotDeleted) found = true;
+//         return !isSlotDeleted;
+//       });
+//     });
 
-    if (!found) {
-      return res.status(404).json({ message: 'Slot not found' });
-    }
+//     if (!found) {
+//       return res.status(404).json({ message: 'Slot not found' });
+//     }
 
-    await calendar.save();
-    res.status(200).json({ message: 'Slot deleted successfully', calendar });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     await calendar.save();
+//     res.status(200).json({ message: 'Slot deleted successfully', calendar });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 app.get('/my-appointments', async (req, res) => {
   const { token } = req.cookies;
   if (!token) {
