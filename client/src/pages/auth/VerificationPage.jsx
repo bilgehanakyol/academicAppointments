@@ -14,7 +14,7 @@ const EmailVerificationPage = () => {
     setSuccess(false);
 
     try {
-      const response = await axios.post('http://localhost:5555/verify-email', {
+      const response = await axios.post('/auth/verify-email', {
         token: verificationCode,
       });
 

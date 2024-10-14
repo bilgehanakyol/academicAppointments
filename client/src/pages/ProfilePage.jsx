@@ -14,7 +14,7 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const { data } = await axios.get('/profile');
+        const { data } = await axios.get('/auth/profile');
         setProfileData(data);
 
         QRCode.toDataURL(data.email, { width: 128 }, (err, url) => {
@@ -36,7 +36,7 @@ export default function ProfilePage() {
   }
 
   async function logout() {
-    await axios.post('/logout');
+    await axios.get('/auth/logout');
     setRedirect('/');
     setUser(null);
   }

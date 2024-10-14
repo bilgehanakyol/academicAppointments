@@ -3,7 +3,7 @@ import axios from 'axios';
 import BackButton from './BackButton';
 import { useParams } from 'react-router-dom';
 import { UserContext } from './UserContext';
-
+//randevu alma ekranı görünümü
 export default function AppointmentDetailPage() {
   const { studentId } = useParams();
   const { user } = useContext(UserContext); 
@@ -79,7 +79,7 @@ export default function AppointmentDetailPage() {
                 onChange={(e) => handleNotesChange(appointment._id, e.target.value)}
                 className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition duration-200 mb-4"
                 rows="4"
-                placeholder="Yeni not girin"
+                placeholder="Enter your notes here..."
               />
               <button
                 onClick={() => handleNotesUpdate(appointment._id)}
@@ -90,7 +90,7 @@ export default function AppointmentDetailPage() {
             </div>
           ))
         ) : (
-          <p className="text-lg text-gray-700">Hiç randevu bulunamadı.</p>
+          <p className="text-lg text-gray-700">No appointments found.</p>
         )}
       </div>
     </div>

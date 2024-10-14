@@ -12,7 +12,7 @@ const EmailResetPage = () => {
     setSuccess(false);
 
     try {
-      const response = await axios.post('/request-reset', { email });
+      const response = await axios.post('/auth/request-reset', { email });
       if (response.data.success) {
         setSuccess(true);
       } else {

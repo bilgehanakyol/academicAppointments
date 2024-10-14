@@ -6,19 +6,24 @@ import jwt from 'jsonwebtoken';
 import crypto from "crypto";
 import { PORT, jwtSecret } from "./config.js";
 import StudentModel from './models/studentModel.js';
-import AcademianModel from './models/academianModel.js';
+//import AcademianModel from './models/academianModel.js';
 import AppointmentModel from './models/appointmentModel.js';
 import AppointmentRequestTemplateModel from "./models/AppointmentRequestTemplate.js";
 import cookieParser from "cookie-parser"; 
-import CalendarModel from "./models/calendarModel.js";
+//import CalendarModel from "./models/calendarModel.js";
 import { connectDB } from "./db/connectdb.js";
 import { sendPasswordResetEmail,
 	sendResetSuccessEmail,
 	sendVerificationEmail,
 	sendWelcomeEmail, } from "./mailtrap/emails.js";
 
+ import authRouter from "./routes/authRoutes.js";
+ import calendarRouter from "./routes/calendarRoutes.js";
+ import appointmentRouter from "./routes/appointmentRoutes.js";
+// import requestTemplateRouter from "./routes/requestTemplateRoutes.js";
+// import { verifyToken } from "./middleware/verifyToken.js";
+
 const app = express();
-//const bcryptSalt = bcrypt.genSaltSync(8);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -28,204 +33,9 @@ app.use(cors({
 }));
 dotenv.config();
 
-app.get('/', (req, res) => {
-  res.send('Hello from API!');
-});
+app.use('/auth', authRouter);
 
-app.post('/register', async (req, res) => {
-  const { name, surname, email, password, role, department, studentNo } = req.body;
 
-  const studentAlreadyExists = await StudentModel.findOne({ email });
-  const academianAlreadyExists = await AcademianModel.findOne({ email });
-  if (studentAlreadyExists || academianAlreadyExists) {
-    return res.status(400).json({ success: false, message: "User already exists" });
-  }
-
-  try {
-    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
-    let userDoc;
-
-    if (role === 'student') {
-      userDoc = await StudentModel.create({
-        name,
-        surname,
-        email,
-        password,
-        department,
-        role,
-        studentNo,
-        verificationToken,
-        verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        isVerified: false 
-      });
-    } else if (role === 'academician') {
-      userDoc = await AcademianModel.create({
-        name,
-        surname,
-        email,
-        password,
-        department,
-        role,
-        verificationToken,
-        verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        isVerified: false 
-      });
-
-      const defaultAvailability = [];
-
-      await CalendarModel.create({
-        academian: userDoc._id,
-        availability: defaultAvailability,
-      });
-    } else {
-      return res.status(400).json('Invalid role');
-    }
-
-    // Not working because of mailtrap.
-    //await sendVerificationEmail(userDoc.email, verificationToken);
-
-    res.json({ success: true, message: 'Registration successful. Please verify your email.' });
-  } catch (e) {
-    console.error(e);
-    res.status(422).json(e.message || 'An error occurred');
-  }
-});
-app.post('/verify-email', async (req, res) => {
-  const { token } = req.body; 
-  try {
-    const userDoc = await StudentModel.findOne({ verificationToken: token }) || await AcademianModel.findOne({ verificationToken: token });
-    if (!userDoc) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
-    }
-    if (userDoc.verificationTokenExpiresAt < Date.now()) {
-      return res.status(400).json({ success: false, message: 'Verification token expired' });
-    }
-    // Kullanıcıyı doğrula
-    userDoc.isVerified = true;
-    const hashedPassword = await bcrypt.hash(userDoc.password, 10); // Şifreyi hash'le
-    userDoc.password = hashedPassword; // Hash'lenmiş şifreyi kaydet
-    userDoc.verificationToken = undefined;
-    userDoc.verificationTokenExpiresAt = undefined;
-    await userDoc.save();
-
-    res.json({ success: true, message: 'Email verified successfully' });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ success: false, message: 'An error occurred' });
-  }
-});
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  try {
-    let userDoc = await StudentModel.findOne({ email });
-if (!userDoc) {
-  userDoc = await AcademianModel.findOne({ email });
-}
-
-if (!userDoc) {
-  return res.status(400).json({ success: false, message: "Invalid credentials." });
-}
-
-    if (userDoc) {
-      const passOk = bcrypt.compareSync(password, userDoc.password);
-      if (passOk) {
-        jwt.sign(
-          { email: userDoc.email, id: userDoc._id },
-          jwtSecret,
-          {},
-          (err, token) => {
-            if (err) {
-              console.error(err);
-              return res.status(500).json('Internal server error');
-            } 
-            // JWT response 
-            res.cookie('token', token, { httpOnly: true }).json(userDoc);
-          }
-        );
-      } else {
-        res.status(422).json('Password is incorrect');
-      }
-    } else {
-      res.status(404).json('User not found');
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json('Internal server error');
-  }
-});
-
-app.post('/request-reset', async (req, res) => {
-  const { email } = req.body;
-
-  try {
-      const user = await StudentModel.findOne({ email }) || await AcademianModel.findOne({ email });
-      
-      if (!user) {
-          return res.status(400).json({ success: false, message: "Email not found." });
-      }
-
-      // Sıfırlama token'ı ve süresi oluşturun
-      const resetToken = crypto.randomBytes(15).toString("hex");
-      user.resetPasswordToken = resetToken;
-      user.resetPasswordExpiresAt = Date.now() + 3600000; // 1 saat geçerli
-      await user.save();
-
-      // Mail gönderim fonksiyonunu çağırın
-      await sendPasswordResetEmail(user.email, resetToken);
-//     await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
-// ne fark olurdu?
-      res.json({ success: true, message: "Reset link sent to your email!" });
-  } catch (err) {
-      console.error("Error in /request-reset:", err); // Hata konsola yazdırılır
-      res.status(500).json({ success: false, message: "Internal server error." });
-  }
-});
-app.post('/reset-password/:token', async (req, res) => {
-  const { token } = req.params; // URL'den token al
-  const { password } = req.body; // Yeni şifreyi al
-
-  try {
-      const user = 
-          await StudentModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } }) || 
-          await AcademianModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: { $gt: Date.now() } });
-
-      if (!user) {
-          return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
-      user.resetPasswordToken = undefined; 
-      user.resetPasswordExpiresAt = undefined; 
-      await user.save();
-
-      await sendResetSuccessEmail(user.email); // Başarılı sıfırlama e-postası gönder
-      res.status(200).json({ success: true, message: "Password reset successfully" });
-  } catch (error) {
-      console.log("Error in reset password", error);
-      res.status(400).json({ success: false, message: error.message });
-  }
-});
-app.get('/profile', (req, res) => {
-  const { token } = req.cookies;
-  if (token) {
-    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-      if (err) throw err;
-      let userDoc = await StudentModel.findById(userData.id);
-      if (!userDoc) {
-        userDoc = await AcademianModel.findById(userData.id);
-      }
-      const { name, surname, email, _id, role, department, studentNo } = userDoc;
-      res.json({ name, surname, email, _id, role, department, studentNo });
-    });
-  } else {
-    res.json(null);
-  }
-});
-app.post('/logout', (req, res) => { 
-  res.cookie('token', '').json(true); 
-});
 app.get('/academicians', async (req, res) => {
   const academicians = await AcademianModel.find();
   res.json(academicians);

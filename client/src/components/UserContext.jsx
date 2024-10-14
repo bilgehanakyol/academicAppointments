@@ -10,7 +10,7 @@ export function UserContextProvider({children}) {
     useEffect(() => {
         async function fetchUser() {
             try {
-                const {data} = await axios.get('/profile');
+                const {data} = await axios.get('/auth/profile');
                 setUser(data);
             } catch (error) {
                 console.error('Failed to fetch user:', error);

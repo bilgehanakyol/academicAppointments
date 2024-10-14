@@ -27,7 +27,7 @@ export default function RegisterPage() {
         };
 
         try {
-            await axios.post('/register', requestData);
+            await axios.post('/auth/register', requestData);
             // Kayıt başarılı olduğunda yönlendirme
             alert('Registration successful! Please verify your email.');
             //navigate('/verify-email'); // navigate to verify email page and send verification token but not working for now
