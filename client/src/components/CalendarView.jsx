@@ -18,7 +18,7 @@ const CalendarView = () => {
     const fetchEvents = async () => {
       try {
         // Akademisyenin müsaitlik bilgilerinin alınması
-        const availabilityResponse = await axios.get(`/calendar/${academianId}`);
+        const availabilityResponse = await axios.get(`/academians/calendar/${academianId}`);
         const availability = availabilityResponse.data.availability;
 
         // Veritabanındaki randevuların alınması

@@ -8,11 +8,11 @@ export default function MyAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(UserContext);
-
+  
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await axios.get('/my-appointments');
+        const response = await axios.get(`/appointments/${user?._id}`);
         setAppointments(response.data || []);
       } catch (error) {
         setAppointments([]); 

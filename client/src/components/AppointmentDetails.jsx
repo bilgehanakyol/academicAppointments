@@ -16,7 +16,7 @@ export default function AppointmentDetailPage() {
     const fetchAppointments = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/appointments/students/${studentId}/academians/${user._id}`);
+        const response = await axios.get(`/appointments/${studentId}/${user._id}`);
         setAppointments(response.data);
         const initialNotes = {};
         response.data.forEach((appointment) => {

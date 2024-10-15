@@ -20,7 +20,7 @@ import StudentSearchPage from './pages/StudentSearchPage';
 
 axios.defaults.baseURL = 'http://localhost:5555';
 axios.defaults.withCredentials = true;
-
+//TODO: linkler düzenlenecek
 function App() {
   return (
     <UserContextProvider>
@@ -34,7 +34,7 @@ function App() {
       <Route path="/create-appointment" element={<CreateAppointmentPage />} />
       <Route path="/appointments/students/:studentId/academians/:academianId" element={<AppointmentDetails />} />
       <Route path='/academians' element={<AcademiciansPage />}/>
-      <Route path="calendar/:academianId" element={<CalendarView />} />
+      <Route path="/academians/calendar/:academianId" element={<CalendarView />} />
       <Route path="/students" element={<StudentSearchPage />} />
       <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/request-reset" element={<EmailResetPage />} />

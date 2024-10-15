@@ -73,3 +73,17 @@ export const deleteSlot = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+export const getCalendar = async (req, res) => {
+    const { academianId } = req.params;
+    try {
+        const calendar = await CalendarModel.findOne({ academian: academianId }).populate('academian');
+        if (!calendar) {
+            return res.status(404).json({ message: 'Calendar not found' });
+        }
+        res.status(200).json(calendar);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching calendar' });
+    }
+}
