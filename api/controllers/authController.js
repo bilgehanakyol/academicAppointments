@@ -11,7 +11,6 @@ import {
 } from '../mailtrap/emails.js';
 const jwtSecret = process.env.JWT_SECRET;
 
-// Kayıt işlemi
 export const register = async (req, res) => {
   const { name, surname, email, password, role, department, studentNo } = req.body;
 
@@ -68,7 +67,6 @@ export const register = async (req, res) => {
   }
 };
 
-// E-posta doğrulama
 export const verifyEmail = async (req, res) => {
   const { token } = req.body;
 
@@ -97,7 +95,6 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-// Giriş yapma
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -143,12 +140,10 @@ export const profile = (req, res) => {
     res.json(null);
   }
 }
-// Çıkış yapma
 export const logout = (req, res) => {
   res.cookie('token', '', { maxAge: 1 }).json({ success: true });
 };
 
-// Şifre sıfırlama isteği
 export const requestReset = async (req, res) => {
   const { email } = req.body;
 
@@ -173,7 +168,6 @@ export const requestReset = async (req, res) => {
   }
 };
 
-// Şifre sıfırlama işlemi
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;

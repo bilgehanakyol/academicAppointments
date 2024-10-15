@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../components/UserContext';
 import BackButton from '../components/BackButton';
+import AppointmentDetailPage from '../components/AppointmentDetails';
 
 export default function StudentSearchPage() {
   const { user } = useContext(UserContext); 
@@ -15,7 +16,7 @@ export default function StudentSearchPage() {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/students/search?studentNo=${studentNo}`);
+const response = await axios.get(`/students/search?studentNo=${studentNo}`);
       setStudent(response.data);
       setError('');
     } catch (error) {
@@ -35,21 +36,21 @@ export default function StudentSearchPage() {
   return (
     <div className="p-4">
       <BackButton />
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-3xl font-semibold text-center mb-6 text-gray-800">Search Student</h2>
-        <div className="mb-6">
+    <div className="min-h-screen bg-gray-100 p-4">
+    <h2 className="text-3xl font-semibold text-center mb-4 text-gray-800">Search Student</h2>
+      <div className="bg-white shadow-lg rounded-lg p-6 mb-4">
+        <div className="flex items-center space-x-4">
           <input
             type="text"
             placeholder="Enter student number"
             value={studentNo}
             onChange={(e) => setStudentNo(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition duration-200"
-          />
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition duration-200"
+            />
           <button
             onClick={handleSearch}
-            className="w-full mt-4 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
-          >
+            className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
+            >
             {loading ? 'Searching...' : 'Seacrh'}
           </button>
         </div>
@@ -78,5 +79,7 @@ export default function StudentSearchPage() {
       </div>
     </div>
     </div>
+    
   );
+  
 }

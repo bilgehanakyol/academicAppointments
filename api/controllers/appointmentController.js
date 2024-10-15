@@ -3,7 +3,7 @@ import StudentModel from "../models/studentModel.js";
 import AcademianModel from "../models/AcademianModel.js";
 import CalendarModel from "../models/CalendarModel.js";
 import jwt from "jsonwebtoken";
-import { jwtSecret } from "../config.js";
+const jwtSecret = process.env.JWT_SECRET;
 
 export const getAppointment = async (req, res) => {
     const { token } = req.cookies;
@@ -107,10 +107,10 @@ export const updateAppointmentNotes = async (req, res) => {
         res.status(500).json({ message: 'Error updating notes' });
     }
 };
-//TODO:test
+
 export const updateAppointmentStatus = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body; // Status bilgisini al
+    const { status } = req.body; 
 
     try {
         const appointment = await AppointmentModel.findById(id);
@@ -119,41 +119,46 @@ export const updateAppointmentStatus = async (req, res) => {
             return res.status(404).json({ message: 'Appointment not found' });
         }
 
-        // Calendar modelinde appointment.calendarSlotId ile ilgili slotu bul
         const calendar = await CalendarModel.findOne({ academian: appointment.academianId });
 
         if (!calendar) {
             return res.status(404).json({ message: 'Calendar not found' });
         }
 
-        // Slot'u calendar içinde bul
-        const slot = calendar.availability.flatMap(day => day.slots).find(slot => slot._id.toString() === appointment.calendarSlotId.toString());
-
+        const slot = calendar.availability.flatMap(
+            day => day.slots).find(slot => 
+                slot._id.toString() === appointment.calendarSlotId.toString()
+                );
+            
         if (!slot) {
             return res.status(404).json({ message: 'Slot not found in the calendar' });
+        } 
+        if (appointment.status === 'cancelled') {
+            appointment.status = 'cancelled';
+            await appointment.save();
+            return res.status(200).json({ message: 'Appointment status updated successfully' });
+        } 
+        else {
+            if (appointment.status === 'confirmed' && slot.isAvailable === true) {
+                appointment.status = 'confirmed';
+                slot.isAvailable = false;
+                await appointment.save();
+                await calendar.save();
+                return res.status(200).json({ message: 'Appointment status updated successfully' });
+            } 
+            else {
+                appointment.status = 'cancelled';
+                await appointment.save();
+                return res.status(200).json({ message: 'This slot is not available' });
+            }
         }
-
-        // Eğer slot isAvailable değilse ve status 'confirmed' ise hata döndür
-        if (!slot.isAvailable && status === 'confirmed') {
-            return res.status(400).json({ message: 'This appointment slot is no longer available' });
-        }
-
-        // Status alanını güncelle
-        appointment.status = status;
-
-        // Eğer status 'confirmed' ise slot'un isAvailable alanını false yap
-        if (status === 'confirmed') {
-            slot.isAvailable = false;
-            await calendar.save();
-        }
-
-        await appointment.save();
         return res.status(200).json({ message: 'Appointment status updated successfully' });
     } catch (error) {
         console.error('Error updating appointment status:', error);
         return res.status(500).json({ message: 'Error updating appointment status', error });
     }
 }
+
 
 export const deleteAppointment = async (req, res) => {
     const { id } = req.params;

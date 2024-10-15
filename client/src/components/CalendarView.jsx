@@ -22,7 +22,7 @@ const CalendarView = () => {
         const availability = availabilityResponse.data.availability;
 
         // Veritabanındaki randevuların alınması
-        const appointmentsResponse = await axios.get(`/appointments/${academianId}`);
+        const appointmentsResponse = await axios.get(`/academians/availability/${academianId}`);
         const appointments = appointmentsResponse.data;
 
         const dayOfWeekMap = {
@@ -93,25 +93,33 @@ const CalendarView = () => {
     const url = `/create-appointment?day=${selectedDay}&slot=${startTime}-${endTime}&academianId=${academianId}&slotId=${event.id}`;
     navigate(url);
   };
-
+//TODO: iki calendar görünümü tek sayfan ref alıp sadece gerekli fonksiyonları çağıracak
   return (
     <div className='p-4'>
       <BackButton />
       <div className="p-4">
-        <h2 className="text-2xl font-semibold mb-4">Randevu Talep Et</h2>
+        <h2 className="text-2xl font-semibold mb-4">Appointment Request</h2>
         <Calendar
-          localizer={localizer}
-          events={events}
-          selectable={false}
-          onSelectEvent={handleSelectEvent}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 500 }}
-          views={['week']}
-          defaultView="week"
-          min={new Date(0, 0, 0, 7, 0, 0)}
-          max={new Date(0, 0, 0, 23, 0, 0)}
-        />
+        localizer={localizer}
+        events={events}
+        selectable
+        onSelectEvent={handleSelectEvent}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 800 }}
+        views={['week']}
+        defaultView="week"
+        min={new Date(0, 0, 0, 7, 0, 0)}
+        max={new Date(0, 0, 0, 23, 0, 0)}
+        step={15}
+        timeslots={4}
+        timeFormat="HH:mm"
+        formats={{
+          timeGutterFormat: 'HH:mm',  // Saatler 24 saatlik formatta
+          eventTimeRangeFormat: ({ start, end }) =>
+            `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
+        }}
+      />
       </div>
     </div>
   );

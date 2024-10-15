@@ -28,21 +28,15 @@ export default function AppointmentItem({ appointment, isAcademician }) {
 
   const handleStatusChange = async (newStatus) => {
     try {
+      setStatus(newStatus);
       if (newStatus === 'confirmed') {
-        // Randevu mevcutsa, 'confirmed' olarak güncelleyebiliriz
-        if (appointment.isAvailable) {
+        try {
           await axios.patch(`/appointments/${appointment._id}/status`, { status: newStatus });
-          setStatus(newStatus);
-        } else {
-          // Randevu mevcut değilse, durumu 'cancelled' olarak ayarla
-          alert('This appointment is no longer available. The status will be updated to cancelled.');
-          await axios.patch(`/appointments/${appointment._id}/status`, { status: 'cancelled' });
-          setStatus('cancelled');
+        }  catch (error) {
+          alert('This time has already been booked. Your appointment has been cancelled.');
         }
       } else if (newStatus === 'cancelled') {
-        // Durumu doğrudan 'cancelled' olarak güncelleyebiliriz
         await axios.patch(`/appointments/${appointment._id}/status`, { status: newStatus });
-        setStatus(newStatus);
       }
     } catch (error) {
       console.error('Error updating status:', error);
