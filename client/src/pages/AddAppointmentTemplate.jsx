@@ -13,7 +13,7 @@ const AddTemplatePage = () => {
     setSuccess(false);
 
     try {
-      const response = await axios.post('/add-appointment-template', { title, content });
+      const response = await axios.post('/templates', { title, content });
 
       if (response.data.success) {
         setSuccess(true);

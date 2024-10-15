@@ -9,7 +9,6 @@ export const getAcademians = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
-
 export const postAcademianAvailability = async (req, res) => {
     const { id } = req.params;
     const { availability } = req.body;
@@ -33,7 +32,6 @@ export const postAcademianAvailability = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
-
 export const getAcademianAvailability = async (req, res) => {
     const { academianId } = req.params;
 
@@ -47,7 +45,6 @@ export const getAcademianAvailability = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
-
 export const deleteSlot = async (req, res) => {
     const { academianId, slotId } = req.params;
 
@@ -73,7 +70,6 @@ export const deleteSlot = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
-
 export const getCalendar = async (req, res) => {
     const { academianId } = req.params;
     try {

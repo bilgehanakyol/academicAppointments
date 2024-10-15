@@ -18,11 +18,11 @@ export default function CreateAppointmentPage() {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await axios.get('/appointment-templates');
+        const response = await axios.get('/templates');
         console.log('API response:', response.data);
         setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
       } catch (error) {
-        console.error('Şablonlar alınırken hata oluştu:', error);
+        console.error('An error occurred while fetching templates:', error);
         setTemplates([]);
       }
     };
