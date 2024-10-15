@@ -37,43 +37,6 @@ app.use('/auth', authRouter);
 app.use('/academians', academianRouter);
 app.use('/appointments', appointmentRouter);
 
-// app.get('/my-appointments', async (req, res) => {
-//   const { token } = req.cookies;
-//   if (!token) {
-//     return res.status(401).json('Unauthorized');
-//   }
-//   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-//     if (err) {
-//       return res.status(403).json('Invalid token');
-//     }
-//     try {
-//       let appointments;
-//       let userDoc;
-//       userDoc = await StudentModel.findById(userData.id);
-//       if (!userDoc) {
-//         userDoc = await AcademianModel.findById(userData.id);
-//         if (!userDoc) {
-//           return res.status(404).json('User not found.');
-//         }
-//       }
-//       if (userDoc.role === 'student') {
-//         appointments = await AppointmentModel.find({ studentId: userData.id })
-//           .populate('academianId');
-//       }
-//       else if (userDoc.role === 'academician') {
-//         appointments = await AppointmentModel.find({ academianId: userData.id })
-//           .populate('studentId');
-//       }
-//       if (!appointments.length) {
-//         return res.status(404).json('No appointments found');
-//       }
-//       res.json(appointments);
-//     } catch (error) {
-//       console.error('Error fetching appointments:', error);
-//       res.status(500).json({ error: 'An error occurred while fetching appointments.' });
-//     }
-//   });
-// });
 
 // app.post('/appointments', async (req, res) => {
 //   const { token } = req.cookies; 

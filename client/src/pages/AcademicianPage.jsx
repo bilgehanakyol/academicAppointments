@@ -7,7 +7,7 @@ export default function AcademiansPage() {
     const [academians, setAcademians] = useState([]);
 
     useEffect(() => {
-        axios.get('/academians/academians')
+        axios.get('/academians')
             .then(response => {
                 setAcademians(response.data);
             })

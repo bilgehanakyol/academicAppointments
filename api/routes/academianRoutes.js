@@ -9,10 +9,10 @@ import {
 
 const router = express.Router();
 
-router.get("/academians", getAcademians);
-router.get("/academians/availability", getAcademianAvailability);
-router.post("/academians/availability", postAcademianAvailability);
-router.delete("/academians/availability/:academianId/:slotId", deleteSlot);
+router.get("/", getAcademians);
+router.get("/availability/:academianId", getAcademianAvailability);
+router.post("/availability/:academianId", postAcademianAvailability);
+router.delete("/availability/:academianId/:slotId", deleteSlot);
 router.get("/calendar/:academianId", getCalendar);
 
 export default router;

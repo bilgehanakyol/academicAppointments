@@ -18,7 +18,7 @@ const AvailabilityManager = () => {
     const fetchAvailability = async () => {
       if (user && ready) {
         try {
-          const response = await axios.get(`/availability/${user._id}`);
+          const response = await axios.get(`/academians/availability/${user._id}`);
           setAvailability(response.data || []);
         } catch (error) {
           console.error("Error fetching availability", error);
@@ -97,7 +97,7 @@ const AvailabilityManager = () => {
 
     // Backend'e slotları gönder
     try {
-      await axios.post(`/availability/${user._id}`, {
+      await axios.post(`/academians/availability/${user._id}`, {
         availability: { day: selectedDay, slots }
       });
 
@@ -115,7 +115,7 @@ const AvailabilityManager = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`/availability/${user._id}/${slotId}`);
+      await axios.delete(`/academians/availability/${user._id}/${slotId}`);
 
       setAvailability(prevAvailability => {
         return prevAvailability.map(day => {
