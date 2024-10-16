@@ -133,6 +133,7 @@ export const updateAppointmentStatus = async (req, res) => {
         if (!slot) {
             return res.status(404).json({ message: 'Slot not found in the calendar' });
         } 
+        appointment.status = status;
         if (appointment.status === 'cancelled') {
             appointment.status = 'cancelled';
             await appointment.save();
@@ -147,6 +148,7 @@ export const updateAppointmentStatus = async (req, res) => {
                 return res.status(200).json({ message: 'Appointment status updated successfully' });
             } 
             else {
+                console.log(appointment.status, slot.isAvailable);
                 appointment.status = 'cancelled';
                 await appointment.save();
                 return res.status(200).json({ message: 'This slot is not available' });
@@ -158,7 +160,6 @@ export const updateAppointmentStatus = async (req, res) => {
         return res.status(500).json({ message: 'Error updating appointment status', error });
     }
 }
-
 
 export const deleteAppointment = async (req, res) => {
     const { id } = req.params;

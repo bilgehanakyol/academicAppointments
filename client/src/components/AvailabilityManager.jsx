@@ -177,7 +177,7 @@ const AvailabilityManager = () => {
   return (
     <div className="p-4">
       <BackButton />
-      <h2 className="text-2xl font-semibold mb-4">Availability Manager</h2>
+      <h2 className="text-2xl font-semibold mb-4">Appointment Calendar</h2>
 
       <div className="mb-4 flex items-center">
         <select onChange={handleDayChange} value={selectedDay} className="border rounded p-2 mr-2">
