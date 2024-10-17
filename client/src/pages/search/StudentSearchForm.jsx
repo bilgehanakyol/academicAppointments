@@ -10,12 +10,7 @@ export default function StudentSearchForm({ studentNo, setStudentNo, handleSearc
         onChange={(e) => setStudentNo(e.target.value)}
         className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition duration-200"
       />
-      <button
-        onClick={handleSearch}
-        className="primary transition duration-200 shadow-md"
-      >
-        {loading ? 'Searching...' : 'Search'}
-      </button>
+
     </div>
   );
 }
