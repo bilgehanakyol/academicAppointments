@@ -5,12 +5,14 @@ import {
     deleteAppointment,
     updateAppointmentNotes,
     updateAppointmentStatus,
-    getStudentandAcademian
+    getStudentandAcademian,
+    updateAppointment
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
 
 router.get("/:id", getAppointment);
+router.patch("/:id", updateAppointment)
 router.post("/", createAppointment);
 router.delete("/:id", deleteAppointment);
 router.patch("/:id/notes", updateAppointmentNotes);

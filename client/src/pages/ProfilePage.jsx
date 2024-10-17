@@ -3,7 +3,7 @@ import axios from 'axios';
 import { UserContext } from '../components/UserContext';
 import { Navigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
-import QRCode from 'qrcode'; 
+//import QRCode from 'qrcode'; 
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
@@ -17,13 +17,13 @@ export default function ProfilePage() {
         const { data } = await axios.get('/auth/profile');
         setProfileData(data);
 
-        QRCode.toDataURL(data.email, { width: 128 }, (err, url) => {
-          if (err) {
-            console.error('Error generating QR code:', err);
-          } else {
-            setQrCode(url);
-          }
-        });
+        // QRCode.toDataURL(data.email, { width: 128 }, (err, url) => {
+        //   if (err) {
+        //     console.error('Error generating QR code:', err);
+        //   } else {
+        //     setQrCode(url);
+        //   }
+        // });
       } catch (error) {
         console.error('Error fetching profile data:', error);
       }
@@ -83,11 +83,11 @@ export default function ProfilePage() {
           )}
 
           <button className='primary' onClick={logout}>Log out</button>
-          <div className="mt-8 flex flex-col items-center">
+          {/* <div className="mt-8 flex flex-col items-center">
             <h2 className="text-xl font-semibold mb-4">QR Code</h2>
             {qrCode && <img src={qrCode} alt="QR Code" />}
             <p className="text-gray-600 mt-2 text-center">Scan this QR code to view your email.</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

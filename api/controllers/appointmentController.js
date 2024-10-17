@@ -90,6 +90,37 @@ export const createAppointment = async (req, res) => {
         res.status(500).json({ message: 'Error creating appointment.' });
     }
 };
+export const updateAppointment = async (req, res) => {
+    const { id } = req.params;
+    const { startTime, endTime } = req.body;
+
+    try {
+        const appointment = await AppointmentModel.findById(id);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        // Status kontrolü ekleniyor
+        if (appointment.status !== 'confirmed') {
+            return res.status(403).json({ message: 'Only confirmed appointments can be updated' });
+        }
+
+        if (!startTime || !endTime) {
+            return res.status(400).json({ message: 'Start time and end time are required' });
+        }
+
+        appointment.startTime = startTime;
+        appointment.endTime = endTime;
+        await appointment.save();
+
+        res.status(200).json({ message: 'Appointment updated successfully', appointment });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating appointment' });
+    }
+};
+
+
 
 export const updateAppointmentNotes = async (req, res) => {
     const { id } = req.params;
@@ -131,6 +162,8 @@ export const updateAppointmentStatus = async (req, res) => {
                 );
             
         if (!slot) {
+            appointment.status = 'cancelled';
+            await appointment.save();
             return res.status(404).json({ message: 'Slot not found in the calendar' });
         } 
         appointment.status = status;

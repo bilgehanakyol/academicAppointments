@@ -177,7 +177,7 @@ const AvailabilityManager = () => {
   return (
     <div className="p-4">
       <BackButton />
-      <h2 className="text-2xl font-semibold mb-4">Appointment Calendar</h2>
+      <h2 className="text-2xl font-semibold mb-4">Availability Manager</h2>
 
       <div className="mb-4 flex items-center">
         <select onChange={handleDayChange} value={selectedDay} className="border rounded p-2 mr-2">
@@ -211,7 +211,7 @@ const AvailabilityManager = () => {
           onChange={e => setNumberOfParts(parseInt(e.target.value))}
           className="border rounded p-2 mr-2 w-16"
         />
-        <button onClick={handleAddSlot} className=" primary w-24">Add Slot</button>
+        <button onClick={handleAddSlot} className="bg-blue-500 text-white p-2 rounded">Ekle</button>
       </div>
 
       <Calendar
