@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import Button from '../../components/Button';
 
 const EmailResetPage = () => {
   const [email, setEmail] = useState('');
@@ -36,14 +37,10 @@ const EmailResetPage = () => {
             required
             className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring focus:ring-blue-400"
           />
-          <button
-            type="submit"
-            className="primary transition duration-200"
-          >
+          <Button type="submit">
             Send Reset Link
-          </button>
+          </Button>
         </form>
-
         {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
         {success && <p className="mt-4 text-green-500 text-center">Reset link sent to your email!</p>}
       </div>

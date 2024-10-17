@@ -4,6 +4,7 @@ import { UserContext } from './UserContext';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import BackButton from './BackButton';
+import Button from './Button';
 
 const localizer = momentLocalizer(moment);
 
@@ -211,7 +212,9 @@ const AvailabilityManager = () => {
           onChange={e => setNumberOfParts(parseInt(e.target.value))}
           className="border rounded p-2 mr-2 w-16"
         />
-        <button onClick={handleAddSlot} className="bg-blue-500 text-white p-2 rounded">Ekle</button>
+        <Button onClick={handleAddSlot} className="w-16">
+          Add
+        </Button>
       </div>
 
       <Calendar

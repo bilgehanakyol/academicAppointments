@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import Button from '../../components/Button';
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
@@ -38,14 +39,8 @@ const ResetPasswordPage = () => {
             required
             className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring focus:ring-blue-400"
           />
-          <button
-            type="submit"
-            className="primary transition duration-200"
-          >
-            Reset Password
-          </button>
+          <Button type="submit">Reset Password</Button>
         </form>
-
         {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
         {success && <p className="mt-4 text-green-500 text-center">Password reset successfully!</p>}
       </div>

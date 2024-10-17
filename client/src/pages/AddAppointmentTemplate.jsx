@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import Button from '../components/Button';
 
 const AddTemplatePage = () => {
   const [title, setTitle] = useState('');
@@ -61,14 +62,10 @@ const AddTemplatePage = () => {
               required
             />
           </div>
-
           <div>
-            <button
-              type="submit"
-              className="w-full primary font-semibold py-2 px-4  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
+            <Button type="submit">
               Add Template
-            </button>
+            </Button>
           </div>
         </form>
       </div>

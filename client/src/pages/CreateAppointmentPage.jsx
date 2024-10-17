@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from '../components/BackButton';
 import { UserContext } from '../components/UserContext';
+import Button from '../components/Button';
 
 export default function CreateAppointmentPage() {
   const { user } = useContext(UserContext);
@@ -44,25 +45,25 @@ export default function CreateAppointmentPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!day || !slot) {
       alert('Gün veya saat bilgisi eksik. Lütfen doğru bilgileri kontrol edin.');
       return;
     }
-  
+
     const [startTime, endTime] = slot.split('-');
     if (!startTime || !endTime) {
       alert('Saat aralığı yanlış formatta. Lütfen kontrol edin.');
       return;
     }
-  
+
     try {
       await axios.post('/appointments', {
         academianId,
         calendarSlotId,
         studentNo: user.studentNo,
         date: day,
-        startTime: startTime.trim(),
+        startTime: startTime.trim(), // times are string
         endTime: endTime.trim(),
         description,
       });
@@ -71,7 +72,10 @@ export default function CreateAppointmentPage() {
       console.error('Randevu talebi oluşturulurken hata oluştu:', error);
       alert('Randevu talebi oluşturulurken hata oluştu. Lütfen tekrar deneyin.');
     }
-  };
+};
+
+
+  
 
   return (
     <div className="p-4">
@@ -121,18 +125,15 @@ export default function CreateAppointmentPage() {
               </label>
               <textarea
                 className="border rounded-md p-3 w-full bg-gray-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                placeholder="Randevu için bir açıklama ekleyin"
+                placeholder="Add a description for appointment"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows="4"
               />
             </div>
-            <button
-              type="submit"
-              className="primary transition shadow-md"
-            >
+            <Button type="submit">
               Appointment Request
-            </button>
+            </Button>
           </form>
         </div>
       </div>

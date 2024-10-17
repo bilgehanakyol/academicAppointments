@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from '../../components/Button';
 
 export default function AppointmentsList({ appointments, notesMap, handleNotesChange, handleNotesUpdate }) {
   return (
@@ -19,12 +20,6 @@ export default function AppointmentsList({ appointments, notesMap, handleNotesCh
             rows="4"
             placeholder="Enter your notes here..."
           />
-          <button
-            onClick={() => handleNotesUpdate(appointment._id)}
-            className="primary transition duration-200 shadow-md"
-          >
-            Update
-          </button>
         </div>
       ))}
     </div>

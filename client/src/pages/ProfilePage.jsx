@@ -3,6 +3,7 @@ import axios from 'axios';
 import { UserContext } from '../components/UserContext';
 import { Navigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
+import Button from '../components/Button';
 //import QRCode from 'qrcode'; 
 
 export default function ProfilePage() {
@@ -81,8 +82,9 @@ export default function ProfilePage() {
               <p>Academician</p>
             </div>
           )}
-
-          <button className='primary' onClick={logout}>Log out</button>
+          <Button onClick={logout}>
+            Log out
+          </Button>
           {/* <div className="mt-8 flex flex-col items-center">
             <h2 className="text-xl font-semibold mb-4">QR Code</h2>
             {qrCode && <img src={qrCode} alt="QR Code" />}

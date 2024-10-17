@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import Button from './Button';
 
 export default function AppointmentItem({ appointment, isAcademician }) {
   const [status, setStatus] = useState(appointment.status);
@@ -35,7 +36,7 @@ export default function AppointmentItem({ appointment, isAcademician }) {
         startTime: newStartTime,
         endTime: newEndTime,
       });
-      setEditMode(false); // Edit modunu kapat
+      setEditMode(false); 
     } catch (error) {
       console.error('Error updating appointment:', error);
       alert('An error occurred while updating the appointment details.');
@@ -58,36 +59,27 @@ export default function AppointmentItem({ appointment, isAcademician }) {
       {/* Pending status for accepting appointments */}
       {isAcademician && status === 'pending' && (
         <div className="mt-2">
-          <button
-            onClick={() => handleStatusChange('confirmed')}
-            className="bg-green-500 text-white p-2 rounded mr-2 hover:bg-green-600"
-          >
+          <Button onClick={() => handleStatusChange('confirmed')}
+          className="bg-green-500 hover:bg-green-600 w-18" >
             Accept
-          </button>
-          <button
-            onClick={() => handleStatusChange('cancelled')}
-            className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-          >
+          </Button>
+          <Button onClick={() => handleStatusChange('cancelled')}
+          className="bg-red-500 hover:bg-red-600 w-18" >
             Reject
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Confirmed status for editing */}
       {isAcademician && status === 'confirmed' && !editMode && (
         <div className="mt-2">
-          <button
-            onClick={() => setEditMode(true)} // Düzenleme modunu aç
-            className="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600"
-          >
+          <Button onClick={() => setEditMode(true)} className="mr-2 w-16">
             Edit
-          </button>
-          <button
-            onClick={() => handleStatusChange('cancelled')}
-            className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-          >
+          </Button>
+          <Button onClick={() => handleStatusChange('cancelled')} 
+          className="bg-red-500 hover:bg-red-600 w-16">
             Cancel
-          </button>
+          </Button>
         </div>
       )}
 
@@ -124,19 +116,14 @@ export default function AppointmentItem({ appointment, isAcademician }) {
               required
             />
           </div>
-          <button
-            type="submit"
-            className="bg-green-500 text-white p-2 rounded mr-2 hover:bg-green-600"
-          >
+          <Button type="submit"
+          className="bg-green-500 hover:bg-green-600">
             Save Changes
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditMode(false)} // Düzenleme modunu kapat
-            className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
-          >
+          </Button>
+          <Button onClick={() => setEditMode(false)} 
+          className="bg-gray-500 hover:bg-gray-600 mt-2">
             Cancel
-          </button>
+          </Button>
         </form>
       )}
     </div>

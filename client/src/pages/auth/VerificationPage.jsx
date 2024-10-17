@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Button from '../../components/Button';
 
 const EmailVerificationPage = () => {
   const [verificationCode, setVerificationCode] = useState('');
@@ -45,14 +46,8 @@ const EmailVerificationPage = () => {
             placeholder="Enter your verification code"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
-          <button
-            type="submit"
-            className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600 transition duration-300"
-          >
-            Verify Email
-          </button>
+          <Button type="submit">Verify Email</Button>
         </form>
-
         {error && (
           <p className="mt-4 text-center text-red-500 font-semibold">
             {error}

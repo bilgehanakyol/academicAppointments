@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../components/UserContext';
 import BackButton from '../../components/BackButton';
+import Button from '../../components/Button';
 
 export default function StudentSearchPage() {
   const { user } = useContext(UserContext); 
@@ -68,16 +69,9 @@ export default function StudentSearchPage() {
               onChange={(e) => setStudentNo(e.target.value)}
               className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition duration-200"
             />
-            <button
-              onClick={handleSearch}
-              className="primary transition duration-200 shadow-md"
-            >
-              {loading ? 'Searching...' : 'Search'}
-            </button>
+              <Button onClick={handleSearch} className="w-24"> {loading ? "Searching..." : "Search"}</Button>
           </div>
-
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-
           {student && (
             <div className="bg-gray-50 p-2 rounded-lg shadow-md">
               <p className="text-lg font-medium text-gray-700">
@@ -111,12 +105,9 @@ export default function StudentSearchPage() {
                     rows="4"
                     placeholder="Enter your notes here..."
                   />
-                  <button
-                    onClick={() => handleNotesUpdate(appointment._id)}
-                    className="primary transition duration-200 shadow-md"
-                  >
+                  <Button onClick={() => handleNotesUpdate(appointment._id)}>
                     Update
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
