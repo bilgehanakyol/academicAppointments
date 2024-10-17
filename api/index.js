@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser"; 
 
 import { connectDB } from "./db/connectdb.js";
+
 import authRouter from "./routes/authRoutes.js";
 import academianRouter from "./routes/academianRoutes.js";
 import appointmentRouter from "./routes/appointmentRoutes.js";

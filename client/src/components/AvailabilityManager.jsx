@@ -211,7 +211,7 @@ const AvailabilityManager = () => {
           onChange={e => setNumberOfParts(parseInt(e.target.value))}
           className="border rounded p-2 mr-2 w-16"
         />
-        <button onClick={handleAddSlot} className="bg-blue-500 text-white p-2 rounded">Ekle</button>
+        <button onClick={handleAddSlot} className=" primary w-24">Add Slot</button>
       </div>
 
       <Calendar

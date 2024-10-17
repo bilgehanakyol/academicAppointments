@@ -12,7 +12,7 @@ export default function StudentSearchForm({ studentNo, setStudentNo, handleSearc
       />
       <button
         onClick={handleSearch}
-        className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
+        className="primary transition duration-200 shadow-md"
       >
         {loading ? 'Searching...' : 'Search'}
       </button>

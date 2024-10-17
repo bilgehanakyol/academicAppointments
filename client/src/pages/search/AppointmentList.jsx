@@ -21,7 +21,7 @@ export default function AppointmentsList({ appointments, notesMap, handleNotesCh
           />
           <button
             onClick={() => handleNotesUpdate(appointment._id)}
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
+            className="primary transition duration-200 shadow-md"
           >
             Update
           </button>
