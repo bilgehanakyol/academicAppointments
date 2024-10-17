@@ -4,18 +4,16 @@ import AcademianModel from "../models/AcademianModel.js";
 import CalendarModel from "../models/CalendarModel.js";
 
 export const getAppointment = async (req, res) => {
-    const user = req.user; // Token'dan elde edilen kullanıcı bilgileri
+    const user = req.user; 
     
-    if (!user || !user.id) { // Burada user.id yerine user._id kullanın
+    if (!user || !user.id) { 
         return res.status(401).json("User not authenticated.");
     }
 
     try {
         let appointments;
         let userDoc;
-
-        // Kullanıcı kimliğini user.id yerine user._id ile al
-        userDoc = await StudentModel.findById(user.id); // Burada user.id kullanmalısınız
+        userDoc = await StudentModel.findById(user.id); 
         if (!userDoc) {
             userDoc = await AcademianModel.findById(user.id);
             if (!userDoc) {
@@ -23,21 +21,17 @@ export const getAppointment = async (req, res) => {
             }
         }
         
-        // Kullanıcının rolüne göre randevuları getir
         if (userDoc.role === 'student') {
-            appointments = await AppointmentModel.find({ studentId: user.id }) // user.id kullan
+            appointments = await AppointmentModel.find({ studentId: user.id })
                 .populate('academianId');
         }
         else if (userDoc.role === 'academician') {
-            appointments = await AppointmentModel.find({ academianId: user.id }) // user.id kullan
+            appointments = await AppointmentModel.find({ academianId: user.id })
                 .populate('studentId');
         }
-
-        // Randevu yoksa hata dön
         if (!appointments.length) {
             return res.status(404).json('No appointments found');
         }
-
         res.json(appointments);
     } catch (error) {
         console.error(error);
@@ -46,7 +40,7 @@ export const getAppointment = async (req, res) => {
 };
 
 export const createAppointment = async (req, res) => {
-    const { id: studentId } = userData;
+    const { id: studentId } = req.user;
     const { academianId, calendarSlotId, date, startTime, endTime, description, notes } = req.body;
 
     const startDateTime = new Date(`${date}T${startTime}:00Z`);

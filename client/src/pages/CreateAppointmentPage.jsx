@@ -50,13 +50,11 @@ export default function CreateAppointmentPage() {
       alert('Gün veya saat bilgisi eksik. Lütfen doğru bilgileri kontrol edin.');
       return;
     }
-
     const [startTime, endTime] = slot.split('-');
     if (!startTime || !endTime) {
       alert('Saat aralığı yanlış formatta. Lütfen kontrol edin.');
       return;
     }
-
     try {
       await axios.post('/appointments', {
         academianId,
@@ -73,10 +71,6 @@ export default function CreateAppointmentPage() {
       alert('Randevu talebi oluşturulurken hata oluştu. Lütfen tekrar deneyin.');
     }
 };
-
-
-  
-
   return (
     <div className="p-4">
       <BackButton />

@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { UserContext } from './UserContext';
+import { UserContext } from '../components/UserContext';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
-import BackButton from './BackButton';
-import Button from './Button';
+import BackButton from '../components/BackButton';
+import Button from '../components/Button';
 
 const localizer = momentLocalizer(moment);
 
@@ -26,61 +26,49 @@ const AvailabilityManager = () => {
         }
       }
     };
-
     fetchAvailability();
   }, [user, ready]);
 
-  // Zaman dilimlerini seçilen parça sayısına göre bölen fonksiyon
   const splitTimeSlots = (start, end, numberOfParts) => {
-    const startHour = parseInt(start.split(':')[0], 10);
-    const startMinute = parseInt(start.split(':')[1], 10);
-    const endHour = parseInt(end.split(':')[0], 10);
-    const endMinute = parseInt(end.split(':')[1], 10);
-
-    const totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+    const [startHour, startMinute] = start.split(':').map(Number);
+    const [endHour, endMinute] = end.split(':').map(Number);
     
-    // Eğer toplam süre parçalanamazsa, null döndür ve uyarı ver
-    if (totalMinutes % numberOfParts !== 0) {
-      return null;
+    const startTotalMinutes = startHour * 60 + startMinute;
+    const endTotalMinutes = endHour * 60 + endMinute;
+    const totalMinutes = endTotalMinutes - startTotalMinutes;
+
+    if (totalMinutes <= 0 || numberOfParts < 1) {
+        return null; // Geçersiz zaman aralığı
     }
 
-    const partDuration = totalMinutes / numberOfParts;
-
+    const partDuration = totalMinutes / numberOfParts; // Her slot için süre
     const slots = [];
-    let currentStartHour = startHour;
-    let currentStartMinute = startMinute;
-
     for (let i = 0; i < numberOfParts; i++) {
-      const slotStart = `${currentStartHour.toString().padStart(2, '0')}:${currentStartMinute.toString().padStart(2, '0')}`;
+        const slotStartTotalMinutes = startTotalMinutes + partDuration * i;
+        const slotEndTotalMinutes = startTotalMinutes + partDuration * (i + 1);
 
-      let currentEndHour = currentStartHour;
-      let currentEndMinute = currentStartMinute + partDuration;
+        const slotStartHour = Math.floor(slotStartTotalMinutes / 60);
+        const slotStartMinute = slotStartTotalMinutes % 60;
+        const slotEndHour = Math.floor(slotEndTotalMinutes / 60);
+        const slotEndMinute = slotEndTotalMinutes % 60;
 
-      if (currentEndMinute >= 60) {
-        currentEndHour += Math.floor(currentEndMinute / 60);
-        currentEndMinute = currentEndMinute % 60;
-      }
+        const slotStart = `${slotStartHour.toString().padStart(2, '0')}:${slotStartMinute.toString().padStart(2, '0')}`;
+        const slotEnd = `${slotEndHour.toString().padStart(2, '0')}:${slotEndMinute.toString().padStart(2, '0')}`;
 
-      const slotEnd = `${currentEndHour.toString().padStart(2, '0')}:${currentEndMinute.toString().padStart(2, '0')}`;
-
-      slots.push({ start: slotStart, end: slotEnd, isAvailable: true });
-
-      currentStartHour = currentEndHour;
-      currentStartMinute = currentEndMinute;
+        slots.push({ start: slotStart, end: slotEnd, isAvailable: true });
     }
-
     return slots;
-  };
+};
+
 
   const handleAddSlot = async () => {
     if (!selectedDay || !newSlot.start || !newSlot.end || numberOfParts < 1) return;
 
-    // Seçilen aralığı belirlenen sayıda slot'a böl
     const slots = splitTimeSlots(newSlot.start, newSlot.end, numberOfParts);
 
     if (!slots) {
-      alert('Girilen zaman aralığı tam sayı ile bölünemiyor. Lütfen başka bir süre veya parça sayısı seçin.');
-      return;
+        alert('Slot not found, Please check.');
+        return;
     }
 
     setAvailability(prevAvailability => {
@@ -92,16 +80,13 @@ const AvailabilityManager = () => {
       } else {
         updatedAvailability.push({ day: selectedDay, slots });
       }
-
       return updatedAvailability;
     });
 
-    // Backend'e slotları gönder
     try {
       await axios.post(`/academians/availability/${user._id}`, {
         availability: { day: selectedDay, slots }
       });
-
       setNewSlot({ start: '', end: '' });
     } catch (error) {
       console.error("Error adding slot", error);
@@ -111,21 +96,14 @@ const AvailabilityManager = () => {
   const handleDeleteSlot = async (event) => {
     const { _id: slotId, start, end } = event;
 
-    const confirmDelete = window.confirm(`Bu zaman aralığını silmek istediğinizden emin misiniz? \n${new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-    
-    if (!confirmDelete) return;
+    if (!window.confirm(`Are you sure you want to delete this time slot? \n${new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)) return;
 
     try {
       await axios.delete(`/academians/availability/${user._id}/${slotId}`);
-
-      setAvailability(prevAvailability => {
-        return prevAvailability.map(day => {
-          return {
-            ...day,
-            slots: day.slots.filter(slot => slot._id !== slotId)
-          };
-        }).filter(day => day.slots.length > 0);
-      });
+      setAvailability(prevAvailability => prevAvailability.map(day => ({
+        ...day,
+        slots: day.slots.filter(slot => slot._id !== slotId)
+      })).filter(day => day.slots.length > 0));
     } catch (error) {
       console.error("Error deleting slot", error);
     }
@@ -136,15 +114,7 @@ const AvailabilityManager = () => {
   };
 
   const getNextDateForDay = (dayName) => {
-    const daysOfWeek = {
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6,
-      'Sunday': 0
-    };
+    const daysOfWeek = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 0 };
     const today = new Date();
     const currentDay = today.getDay();
     const daysUntilNext = (daysOfWeek[dayName] + 7 - currentDay) % 7;
@@ -158,10 +128,8 @@ const AvailabilityManager = () => {
       const nextDayDate = getNextDateForDay(day.day);
       const startDateTime = new Date(nextDayDate);
       const endDateTime = new Date(nextDayDate);
-
-      const [startHour, startMinute] = slot.start.split(':');
-      const [endHour, endMinute] = slot.end.split(':');
-
+      const [startHour, startMinute] = slot.start.split(':').map(Number);
+      const [endHour, endMinute] = slot.end.split(':').map(Number);
       startDateTime.setHours(startHour, startMinute);
       endDateTime.setHours(endHour, endMinute);
 
@@ -183,24 +151,18 @@ const AvailabilityManager = () => {
       <div className="mb-4 flex items-center">
         <select onChange={handleDayChange} value={selectedDay} className="border rounded p-2 mr-2">
           <option value="">Choose a day</option>
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-          <option value="Saturday">Saturday</option>
-          <option value="Sunday">Sunday</option>
+          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+            <option key={day} value={day}>{day}</option>
+          ))}
         </select>
         <input
           type="time"
-          placeholder="Başlangıç"
           value={newSlot.start}
           onChange={e => setNewSlot({ ...newSlot, start: e.target.value })}
           className="border rounded p-2 mr-2"
         />
         <input
           type="time"
-          placeholder="Bitiş"
           value={newSlot.end}
           onChange={e => setNewSlot({ ...newSlot, end: e.target.value })}
           className="border rounded p-2 mr-2"
@@ -233,9 +195,8 @@ const AvailabilityManager = () => {
         timeslots={4}
         timeFormat="HH:mm"
         formats={{
-          timeGutterFormat: 'HH:mm',  // Saatler 24 saatlik formatta
-          eventTimeRangeFormat: ({ start, end }) =>
-            `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
+          timeGutterFormat: 'HH:mm',
+          eventTimeRangeFormat: ({ start, end }) => `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
         }}
       />
     </div>

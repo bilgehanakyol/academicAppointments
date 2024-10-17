@@ -1,5 +1,6 @@
 import AcademianModel from "../models/AcademianModel.js";
 import CalendarModel from "../models/CalendarModel.js";
+import cron from "node-cron"
 
 export const getAcademians = async (req, res) => {
     try {
@@ -9,7 +10,6 @@ export const getAcademians = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
-//TODO: aynı saatte dolu slot var mı kontrolü
 export const postAcademianAvailability = async (req, res) => {
     const { academianId } = req.params;
     const { availability } = req.body;
@@ -77,6 +77,13 @@ export const getCalendar = async (req, res) => {
         const calendar = await CalendarModel.findOne({ academian: academianId }).populate('academian');
         if (!calendar) {
             return res.status(404).json({ message: 'Calendar not found' });
+        }
+        const sunday = calendar.availability.find(day => day.day === 6);
+        if (sunday) {
+            sunday.slots.forEach(slot => {
+                slot.isAvailable = true;
+            });
+            await calendar.save();
         }
         res.status(200).json(calendar);
     } catch (error) {
