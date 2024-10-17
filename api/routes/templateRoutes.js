@@ -3,10 +3,11 @@ import {
     templates,
     addTemplate
 } from "../controllers/templatesContoler.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/", templates);
-router.post("/", addTemplate);
+router.get("/", verifyToken, templates);
+router.post("/", verifyToken, addTemplate);
 
 export default router;

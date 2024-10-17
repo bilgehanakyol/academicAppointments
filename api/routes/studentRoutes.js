@@ -3,10 +3,11 @@ import {
     getStudent,
     searchStudent,
 } from "../controllers/studentController.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/", getStudent);
-router.get("/search", searchStudent);
+router.get("/", verifyToken, getStudent);
+router.get("/search", verifyToken, searchStudent);
 
 export default router;

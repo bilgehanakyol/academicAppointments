@@ -8,15 +8,16 @@ import {
     getStudentandAcademian,
     updateAppointment
 } from "../controllers/appointmentController.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/:id", getAppointment);
-router.patch("/:id", updateAppointment)
-router.post("/", createAppointment);
-router.delete("/:id", deleteAppointment);
-router.patch("/:id/notes", updateAppointmentNotes);
-router.patch("/:id/status", updateAppointmentStatus);
-router.get("/:studentId/:academianId", getStudentandAcademian);
+router.get("/:id", verifyToken, getAppointment);
+router.patch("/:id", verifyToken, updateAppointment)
+router.post("/", verifyToken, createAppointment);
+router.delete("/:id", verifyToken, deleteAppointment);
+router.patch("/:id/notes", verifyToken, updateAppointmentNotes);
+router.patch("/:id/status", verifyToken, updateAppointmentStatus);
+router.get("/:studentId/:academianId", verifyToken, getStudentandAcademian);
 
 export default router;

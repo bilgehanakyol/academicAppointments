@@ -2,60 +2,50 @@ import AppointmentModel from "../models/appointmentModel.js";
 import StudentModel from "../models/studentModel.js";
 import AcademianModel from "../models/AcademianModel.js";
 import CalendarModel from "../models/CalendarModel.js";
-import jwt from "jsonwebtoken";
-const jwtSecret = process.env.JWT_SECRET;
 
 export const getAppointment = async (req, res) => {
-    const { token } = req.cookies;
-    if (!token) {
-        return res.status(401).json('Unauthorized');
+    const user = req.user; // Token'dan elde edilen kullanıcı bilgileri
+    
+    if (!user || !user.id) { // Burada user.id yerine user._id kullanın
+        return res.status(401).json("User not authenticated.");
     }
 
-    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-        if (err) {
-            return res.status(403).json('Invalid token');
+    try {
+        let appointments;
+        let userDoc;
+
+        // Kullanıcı kimliğini user.id yerine user._id ile al
+        userDoc = await StudentModel.findById(user.id); // Burada user.id kullanmalısınız
+        if (!userDoc) {
+            userDoc = await AcademianModel.findById(user.id);
+            if (!userDoc) {
+                return res.status(404).json('User not found.');
+            }
+        }
+        
+        // Kullanıcının rolüne göre randevuları getir
+        if (userDoc.role === 'student') {
+            appointments = await AppointmentModel.find({ studentId: user.id }) // user.id kullan
+                .populate('academianId');
+        }
+        else if (userDoc.role === 'academician') {
+            appointments = await AppointmentModel.find({ academianId: user.id }) // user.id kullan
+                .populate('studentId');
         }
 
-        try {
-            let appointments;
-            let userDoc;
-            userDoc = await StudentModel.findById(userData.id);
-            if (!userDoc) {
-                userDoc = await AcademianModel.findById(userData.id);
-                if (!userDoc) {
-                    return res.status(404).json('User not found.');
-                }
-            }
-            if (userDoc.role === 'student') {
-                appointments = await AppointmentModel.find({ studentId: userData.id })
-                    .populate('academianId');
-            }
-            else if (userDoc.role === 'academician') {
-                appointments = await AppointmentModel.find({ academianId: userData.id })
-                    .populate('studentId');
-            }
-            if (!appointments.length) {
-                return res.status(404).json('No appointments found');
-            }
-            res.json(appointments);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Error fetching appointments' });
+        // Randevu yoksa hata dön
+        if (!appointments.length) {
+            return res.status(404).json('No appointments found');
         }
-    });
+
+        res.json(appointments);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching appointments' });
+    }
 };
 
 export const createAppointment = async (req, res) => {
-    const { token } = req.cookies;
-    if (!token) {
-        return res.status(401).json('Unauthorized');
-    }
-    let userData;
-    try {
-        userData = jwt.verify(token, jwtSecret);
-    } catch (error) {
-        return res.status(401).json('Invalid token');
-    }
     const { id: studentId } = userData;
     const { academianId, calendarSlotId, date, startTime, endTime, description, notes } = req.body;
 
@@ -65,9 +55,11 @@ export const createAppointment = async (req, res) => {
     try {
         const existingAppointment = await AppointmentModel.findOne({
             academianId,
-            startTime: { $lt: endDateTime }, // Randevu bitişi mevcutdan küçük
-            endTime: { $gt: startDateTime }, // Randevu başlangıcı mevcutdan büyük
+            startTime: { $lt: endDateTime },
+            endTime: { $gt: startDateTime },
+            status: { $ne: 'confirmed' } // Statusu "confirmed" olmayan randevuları kontrol et
         });
+
         if (existingAppointment) {
             console.log('Appointment already exists:', existingAppointment);
             return res.status(400).json({ message: 'This time slot is already booked.' });
@@ -90,6 +82,9 @@ export const createAppointment = async (req, res) => {
         res.status(500).json({ message: 'Error creating appointment.' });
     }
 };
+
+
+
 export const updateAppointment = async (req, res) => {
     const { id } = req.params;
     const { startTime, endTime } = req.body;
@@ -100,7 +95,6 @@ export const updateAppointment = async (req, res) => {
             return res.status(404).json({ message: 'Appointment not found' });
         }
 
-        // Status kontrolü ekleniyor
         if (appointment.status !== 'confirmed') {
             return res.status(403).json({ message: 'Only confirmed appointments can be updated' });
         }
@@ -119,8 +113,6 @@ export const updateAppointment = async (req, res) => {
         res.status(500).json({ message: 'Error updating appointment' });
     }
 };
-
-
 
 export const updateAppointmentNotes = async (req, res) => {
     const { id } = req.params;

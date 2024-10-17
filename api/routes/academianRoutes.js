@@ -6,13 +6,14 @@ import {
     deleteSlot,
     getCalendar
 } from "../controllers/academianController.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/", getAcademians);
-router.get("/availability/:academianId", getAcademianAvailability);
-router.post("/availability/:academianId", postAcademianAvailability);
-router.delete("/availability/:academianId/:slotId", deleteSlot);
-router.get("/calendar/:academianId", getCalendar);
+router.get("/", verifyToken, getAcademians);
+router.get("/availability/:academianId", verifyToken, getAcademianAvailability);
+router.post("/availability/:academianId", verifyToken, postAcademianAvailability);
+router.delete("/availability/:academianId/:slotId", verifyToken, deleteSlot);
+router.get("/calendar/:academianId", verifyToken, getCalendar);
 
 export default router;

@@ -9,14 +9,15 @@ export const getAcademians = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+//TODO: aynı saatte dolu slot var mı kontrolü
 export const postAcademianAvailability = async (req, res) => {
-    const { id } = req.params;
+    const { academianId } = req.params;
     const { availability } = req.body;
     try {
-        let calendar = await CalendarModel.findOne({ academian: id });
+        let calendar = await CalendarModel.findOne({ academian: academianId });
 
         if (!calendar) {
-            calendar = new CalendarModel({ academian: id, availability: [] });
+            calendar = new CalendarModel({ academian: academianId, availability: [] });
         }
 
         const dayIndex = calendar.availability.findIndex(d => d.day === availability.day);
