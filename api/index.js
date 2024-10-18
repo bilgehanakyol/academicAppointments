@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser"; 
+import cron from "node-cron"
 
 import { connectDB } from "./db/connectdb.js";
 
@@ -10,7 +11,7 @@ import academianRouter from "./routes/academianRoutes.js";
 import appointmentRouter from "./routes/appointmentRoutes.js";
 import studentRouter from "./routes/studentRoutes.js";
 import templateRouter from "./routes/templateRoutes.js";
-// import { verifyToken } from "./middleware/verifyToken.js";
+import CalendarModel from "./models/CalendarModel.js";
 
 const app = express();
 
@@ -21,6 +22,25 @@ app.use(cors({
   credentials: true 
 }));
 dotenv.config();
+
+cron.schedule('0 0 * * 0', async () => {
+  try {
+      const calendars = await CalendarModel.find();
+
+      calendars.forEach(async (calendar) => {
+          calendar.availability.forEach(day => {
+              day.slots.forEach(slot => {
+                  slot.isAvailable = true;
+              });
+          });
+          await calendar.save();
+      });
+
+      console.log("All slots have been set to available on Sunday at 00:00.");
+  } catch (error) {
+      console.error("Error updating slots:", error);
+  }
+});
 
 app.use('/auth', authRouter);
 app.use('/academians', academianRouter);
